@@ -18,9 +18,12 @@ elif ml.model == 'comb':
 
 # generate parameter labels
 labels = []
-if ml.model == 'comb' or ml.model == 'comb_marg':
+if ml.model == 'star':
+	labels = [r'$\nu_{n00}$', r'$\Delta_\nu$', r'$\nu_{\rm max}$', \
+			  r'$H$', r'$W$', r'$r_{01}$']
+elif ml.model == 'comb' or ml.model == 'comb_marg':
 	labels = [r'$\omega_0$', r'$\Delta\omega$']
-if ml.model != 'comb_marg':
+if ml.model == 'ind' or ml.model == 'comb':
 	for i in range(n_comp_fit):
 		labels.append(r'$A_{:d}$'.format(i+1))
 		labels.append(r'$B_{:d}$'.format(i+1))
@@ -28,10 +31,18 @@ if ml.model != 'comb_marg':
 			labels.append(r'$\log (\omega_{:d})$'.format(i+1))
 
 # read in ground truth
-p_true = np.genfromtxt('test_params.txt')
-n_comp_true, n_p_true = p_true.shape
-if ml.model == 'comb':
-	n_comp_true -= 1
+if ml.model == 'star':
+	with open('test_params.txt', 'r') as f:
+		p_true = []
+		for p in f.readline().split():
+			p_true.append(float(p))
+		p_true = np.array(p_true)
+	f.closed
+else:
+	p_true = np.genfromtxt('test_params.txt')
+	n_comp_true, n_p_true = p_true.shape
+	if ml.model == 'comb':
+		n_comp_true -= 1
 
 # choose between analysis software
 if use_corner:
@@ -75,6 +86,10 @@ if use_corner:
 				fig.axes[a_ind].axhline(p_true[0, i], \
 										color='red', ls=':', \
 										lw = 1.5)
+			elif ml.model == 'star':
+				fig.axes[a_ind].axhline(p_true[i], \
+										color='red', ls=':', \
+										lw = 1.5)
 		for j in range(i + 1):
 			a_ind = i * n_p + j
 			if ml.model == 'ind':
@@ -96,6 +111,10 @@ if use_corner:
 												lw = 1.5)
 			elif ml.model == 'comb_marg':
 				fig.axes[a_ind].axvline(p_true[0, j], \
+										color='red', ls=':', \
+										lw = 1.5)
+			elif ml.model == 'star':
+				fig.axes[a_ind].axvline(p_true[j], \
 										color='red', ls=':', \
 										lw = 1.5)
 	mp.savefig('test_posterior.pdf')

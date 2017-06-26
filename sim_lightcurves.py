@@ -19,25 +19,59 @@ mp.rcParams['lines.linewidth'] = lw
 t_min = 0.0
 t_max = 30.0 * 24.0 * 60.0 # 30 days in mins
 n_t = int((t_max - t_min) / ml.t_sample)
-n_comp = 2
 
 # determine accessible frequency range
 nu_min = 1.0 / (t_max - t_min)
 nu_nyq = 0.5 * (n_t - 1) / (t_max - t_min)
 
 # generate signal parameters
-amps = npr.normal(ml.amp_mu, ml.amp_sigma, n_comp * 2)
-if ml.model == 'ind':
-	taus = 10.0 ** (npr.uniform(ml.log_tau_min, ml.log_tau_max, \
-								n_comp))
-	omegas = 2.0 * np.pi / taus
-elif ml.model == 'comb' or ml.model == 'comb_marg':
-	omega_c = 10.0 ** (npr.uniform(ml.log_omega_min, \
-								   ml.log_omega_max))
-	d_omega = npr.normal(ml.d_omega_mu, ml.d_omega_sigma)
-	omegas = omega_c * \
-			 (1.0 + d_omega * (np.arange(n_comp) - \
-			 				   (n_comp - 1) / 2.0))
+if ml.model == 'star':
+
+	npr.seed(0)
+
+	# number of modes
+	n_comp = (ml.l_max + 1) * (2 * ml.k_max + 1)
+
+	# draw parameters
+	nu_0 = 10.0 ** (npr.uniform(ml.log_omega_min, \
+								ml.log_omega_max)) / 2.0 / np.pi
+	d_nu = npr.normal(ml.d_omega_mu, ml.d_omega_sigma) / 5.0
+	nu_max = nu_0
+	bell_h = ml.amp_sigma ** 2
+	bell_w = d_nu * nu_0 * 4.0
+	r_01 = 0.5
+
+	# construct frequencies and their std devs
+	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, nu_0, \
+									 d_nu, nu_max, bell_h, \
+									 bell_w, r_01)
+	'''for i in range(n_comp):
+		mp.plot([nus[i], nus[i]], [0, amp_sigmas[i] ** 2], 'k')
+	nu_grid = np.linspace(nus[0], nus[-1], 1000)
+	mp.plot(nu_grid, bell_h * np.exp(-0.5 * ((nu_grid - nu_max) / bell_w) ** 2), 'r')
+	mp.plot(nu_grid, bell_h * np.exp(-0.5 * ((nu_grid - nu_max) / bell_w) ** 2) * r_01, 'r--')
+	mp.show()
+	exit()'''
+
+	# generate signal
+	amps = npr.randn(n_comp * 2) * np.sqrt(amp_vars)
+	omegas = 2.0 * np.pi * nus
+
+else:
+
+	n_comp = 2
+	amps = npr.normal(ml.amp_mu, ml.amp_sigma, n_comp * 2)
+	if ml.model == 'ind':
+		taus = 10.0 ** (npr.uniform(ml.log_tau_min, ml.log_tau_max, \
+									n_comp))
+		omegas = 2.0 * np.pi / taus
+	elif ml.model == 'comb' or ml.model == 'comb_marg':
+		omega_c = 10.0 ** (npr.uniform(ml.log_omega_min, \
+									   ml.log_omega_max))
+		d_omega = npr.normal(ml.d_omega_mu, ml.d_omega_sigma)
+		omegas = omega_c * \
+				 (1.0 + d_omega * (np.arange(n_comp) - \
+				 				   (n_comp - 1) / 2.0))
 
 # generate data
 t = np.linspace(t_min, t_max, n_t)
@@ -59,7 +93,7 @@ for i in range(n_comp):
 							amps[2 * i + 1], omegas[i])
 if ml.model == 'ind':
 	file_fmt = '{:19.12e} {:19.12e} {:19.12e}\n'
-elif ml.model == 'comb' or ml.model == 'comb_marg':
+else:
 	file_fmt = '{:19.12e} {:19.12e}\n'
 np.savetxt('test_lightcurve.txt', zip(t, d))
 with open('test_params.txt', 'w') as f:
@@ -69,6 +103,13 @@ with open('test_params.txt', 'w') as f:
 									omegas[i]))
 	elif ml.model == 'comb' or ml.model == 'comb_marg':
 		f.write(file_fmt.format(omega_c, d_omega))
+		for i in range(n_comp):
+			f.write(file_fmt.format(amps[2 * i], amps[2 * i + 1]))
+	elif ml.model == 'star':
+		par_fmt = '{:19.12e} {:19.12e} {:19.12e} ' + \
+				  '{:19.12e} {:19.12e} {:19.12e}\n'
+		f.write(par_fmt.format(nu_0, d_nu, nu_max, bell_h, \
+							   bell_w, r_01))
 		for i in range(n_comp):
 			f.write(file_fmt.format(amps[2 * i], amps[2 * i + 1]))
 f.closed

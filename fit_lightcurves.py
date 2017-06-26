@@ -42,6 +42,23 @@ def mn_prior_comb_marg(cube, n_dim, n_par):
 	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu, \
 								ml.d_omega_sigma)
 
+# MultiNest full comb prior, marginalized over amps
+def mn_prior_full_comb_marg(cube, n_dim, n_par):
+
+	# nu_0, d_nu, nu_max, bell_h, bell_w, r_01
+	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
+								   ml.log_omega_max) / 2.0 / np.pi
+	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
+								ml.d_omega_sigma / 5.0)
+
+
+	cube[2] = ml.log_uniform_prior(cube[2], ml.log_omega_min, \
+								   ml.log_omega_max) / 2.0 / np.pi
+	cube[3] = ml.log_uniform_prior(cube[3], -2.0, 1.0)
+	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
+								   ml.log_omega_max) / 2.0 / np.pi
+	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+
 # MultiNest log-likelihood
 def mn_log_like(cube, n_dim, n_par):
 
@@ -76,6 +93,23 @@ def mn_log_like_comb_marg(cube, n_dim, n_par):
 										   c_mat_log_det, b_mat, \
 										   np.ones(n_comp_fit * 2) * \
 										   ml.amp_sigma ** 2)
+	log_like = np.dot(d.T, np.dot(v_inv_mat, d)) + log_det
+	return -0.5 * log_like
+
+# MultiNest comb log-likelihood, marginalized over amps
+def mn_log_like_full_comb_marg(cube, n_dim, n_par):
+
+	# construct frequencies and their std devs
+	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, cube[0], \
+									 cube[1], cube[2], cube[3], \
+									 cube[4], cube[5])
+	omegas = 2.0 * np.pi * nus
+
+	# calculate log-like
+	b_mat = ml.des_mat(t, omegas)
+	v_inv_mat, log_det = ml.update_inv_det(c_mat_inv, \
+										   c_mat_log_det, b_mat, \
+										   amp_vars)
 	log_like = np.dot(d.T, np.dot(v_inv_mat, d)) + log_det
 	return -0.5 * log_like
 
@@ -119,12 +153,21 @@ elif ml.model == 'comb':
 		   sampling_efficiency = 0.3)
 elif ml.model == 'comb_marg':
 	n_par_fit = 2
-	lambda_mat = np.diag(np.ones(n_par_fit * n_comp_fit) * ml.amp_sigma ** 2)
 	c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)
 	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
 	mn.run(mn_log_like_comb_marg, mn_prior_comb_marg, n_par_fit, \
 		   resume = False, verbose = True, \
+		   outputfiles_basename = u'chains/test', \
+		   n_live_points = 1000, evidence_tolerance = 0.5, \
+		   sampling_efficiency = 0.3)
+elif ml.model == 'star':
+	n_par_fit = 6
+	c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
+	c_mat_inv = np.linalg.inv(c_mat)
+	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
+	mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
+		   n_par_fit, resume = False, verbose = True, \
 		   outputfiles_basename = u'chains/test', \
 		   n_live_points = 1000, evidence_tolerance = 0.5, \
 		   sampling_efficiency = 0.3)

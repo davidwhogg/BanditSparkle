@@ -8,6 +8,8 @@ tau_min = 3.0 * 60.0 # mins
 tau_max = 300.0 * 60.0
 log_tau_min = np.log10(tau_min)
 log_tau_max = np.log10(tau_max)
+l_max = 1
+k_max = 16
 omega_min = 2.0 * np.pi / tau_max
 omega_max = 2.0 * np.pi / tau_min
 log_omega_min = np.log10(omega_min)
@@ -20,7 +22,7 @@ amp_mu = 0.0
 amp_sigma = 0.7
 noise_sigma = 2.0
 n_p = 3
-model = 'comb_marg' # 'comb_marg', comb' or 'ind'
+model = 'star' # 'star', comb_marg', comb' or 'ind'
 
 # lightcurve model
 def lightcurve(time, amp_s, amp_c, omega):
@@ -38,6 +40,28 @@ def des_mat(time, omega):
 		des_mat[:, 2*i] = np.sin(omega[i] * time)
 		des_mat[:, 2*i+1] = np.cos(omega[i] * time)
 	return des_mat
+
+# generate comb of frequencies and their variances
+def comb_freq_var(k_max, l_max, nu_0, d_nu, nu_max, bell_h, bell_w, \
+				  r_01):
+
+	# @TODO: QUESTIONS TO ASK
+	# 1 - is the variance at ell=1 half that of the ell=0 mode or 
+	#     half the bell curve at nu_nk1?
+	# 2 - am i drawing the amps from the variances correctly? i don't
+	#     think i should be adjusting by 1/2
+	n_comp = (l_max + 1) * (2 * k_max + 1)
+	ks = np.zeros(n_comp)
+	ind = 0
+	for k in range(-k_max, k_max + 1):
+		for el in range(l_max + 1):
+			ks[ind] = k + el * 0.5
+			ind += 1
+	els = np.mod(np.arange(n_comp), 2)
+	nus = nu_0 * (1.0 + ks * d_nu)
+	amp_vars = bell_h * r_01 ** els * \
+			   np.exp(-0.5 * ((nus - nu_max) / bell_w) ** 2)
+	return nus, np.repeat(amp_vars, 2)
 
 # various generic prior rescalings for MultiNest
 def uniform_prior(x, x_min, x_max):
