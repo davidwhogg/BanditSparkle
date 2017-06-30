@@ -23,7 +23,7 @@
 %%
 %%
 %% using aastex version 6.1
-\documentclass{aastex61}
+\documentclass[modern]{aastex61}
 
 %% The default is a single spaced, 10 point font, single spaced article.
 %% There are 5 other style options available via an optional argument. They
@@ -206,9 +206,9 @@
 \author[0000-0003-2268-2519]{Stephen M. Feeney}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
 
-\author{David W. Hogg}
+\author[0000-0003-2866-9403]{David W. Hogg}
 \affiliation{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
-\affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA }
+\affiliation{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, room 1005, New York, NY 10003, USA }
 \affiliation{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA }
 \affiliation{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg, Germany }
 
@@ -252,7 +252,39 @@ miscellaneous --- catalogs --- surveys}
 %% tied to the reference list via symbolic KEYs. The KEY corresponds
 %% to the KEY in the \bibitem in the reference list below. 
 
-\section{Introduction} \label{sec:intro}
+\section{Introduction}\label{sec:intro}
+
+Asteroseismology is performed by taking continuous, excellent data.
+
+Parameter estimation is done by looking at the FT of the time-domain data.
+
+The FT is much cleaner when the data is regularly spaced, close to
+homoskedastic, and taken identically.
+
+For example, the FT of the data is the multiply of the FT of the star
+with the FT of the exposure-time window, so the whole project breaks
+if the exposure time is varied.
+
+For another example, there is no traditional way to do
+asteroseismology with sparse-in-time data, like that which will be
+produced by LSST and Gaia.
+
+For yet another: Time-localized outlers are death in the Fourier domain.
+
+But in asteroseismology we are only trying to learn a very small number
+of scalars from the light curve. Do we really need to beat the light curve
+against every possible period?
+
+Finally: Stars are damned coherent. Red giants, in particular, show little
+or no sign of decoherence over the entire duration of the Kepler mission.
+That should make life better; how?
+
+Here we capitalize on the near-coherence of the modes over reasonable
+time periods (and the magic of Gaussians) to perform asteroseismic
+parameter estimation in the time domain, without any use of the
+Fourier transform.
+
+\section{Method}\label{sec:method}
 
 Consider a set of $2K+1$ modes, indexed by $k \in \mathbb{Z}: -K \le k \le K$. Assuming that the $\ell = 0, 1$ modes are present, we expect a comb of $4K+2$ peaks in the power spectrum. The $\ell = 0$ modes are located at
 \begin{equation}
