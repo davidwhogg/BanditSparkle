@@ -107,9 +107,10 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 
 	# calculate log-like
 	b_mat = ml.des_mat(t, omegas)
-	v_inv_mat, log_det = ml.update_inv_det(c_mat_inv, \
-										   c_mat_log_det, b_mat, \
-										   amp_vars)
+	v_inv_mat, log_det = ml.update_inv_det_stable(c_mat_inv, \
+												  c_mat_log_det, \
+												  b_mat, \
+												  amp_vars)
 	log_like = np.dot(d.T, np.dot(v_inv_mat, d)) + log_det
 	return -0.5 * log_like
 

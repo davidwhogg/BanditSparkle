@@ -94,3 +94,22 @@ def update_inv_det(c_mat_inv, c_mat_log_det, b_mat, par_vars):
 	out_inv = c_mat_inv - np.dot(c_inv_b, np.dot(a_mat_inv, c_inv_b.T))
 	return out_inv, out_log_det
 
+def update_inv_det_stable(c_mat_inv, c_mat_log_det, b_mat, par_vars):
+
+	# @TODO: speed up multiplication by diagonal matrix
+	# @TODO: speed up addition with diagonal matrix
+
+	# par_vars should be an array of parameter variances
+	lambda_mat = np.diag(par_vars)
+	q_mat_inv = np.dot(b_mat.T, np.dot(c_mat_inv, b_mat))
+	a_mat = np.eye(len(par_vars)) + np.dot(lambda_mat, q_mat_inv)
+
+	# update inverse
+	a_mat_inv_lambda = np.dot(np.linalg.inv(a_mat), lambda_mat)
+	c_inv_b = np.dot(c_mat_inv, b_mat)
+	out_inv = c_mat_inv - np.dot(c_inv_b, np.dot(a_mat_inv_lambda, c_inv_b.T))
+
+	# update determinant
+	out_log_det = np.linalg.slogdet(a_mat)[1] + c_mat_log_det
+	return out_inv, out_log_det
+
