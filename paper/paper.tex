@@ -88,6 +88,7 @@
 \newcommand{\tess}{\project{\acronym{TESS}}}
 \newcommand{\gaia}{\project{Gaia}}
 \newcommand{\lsst}{\project{\acronym{LSST}}}
+\newcommand{\bsa}{\project{\acronym{BSA}}}
 
 \newcommand{\normal}{\ensuremath{{\rm N}}}
 
@@ -156,7 +157,7 @@
 %% This is the end of the preamble.  Indicate the beginning of the
 %% manuscript itself with \begin{document}.
 
-\begin{document}
+\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust the Hogg
 
 \title{Asteroseismology {\it sans Fourier}: soon to be crushed by DFM}
 
@@ -232,14 +233,14 @@
 %% the nearby authors are not part of surrounding collaborations.
 
 %% Mark off the abstract in the ``abstract'' environment. 
-\begin{abstract}
-Stellar oscillations are stochastically driven high-*Q* modes.
+\begin{abstract}\noindent % trust the Hogg
+Stellar oscillations are stochastically driven high-quality (long-coherence-time) modes.
 If a star is observed through an observing campaign that is shorter
 than the coherence time of a mode, that mode will effectively appear
 coherent within that time interval.
 Here we exploit this to create an inexpensive probabilistic model for
-asteroseismology data.
-The huge advantage of this approach to traditional asteroseismology
+asteroseismology data called \bsa.
+The huge advantage of \bsa\ over to traditional asteroseismology
 approaches is that it does not require the performance of a fourier
 transform or anything like it; this permits the measurement of
 asteroseismic parameters in data sets that are irregularly or sparsely
@@ -258,6 +259,9 @@ We sub-sample the \kepler\ light curves to (short duration)
 even in these much smaller data sets, we ought to be able to estimate
 asteroseismic parameters for many stars, and (because we are just
 turning the Bayesian crank) without human intervention.
+Much of what is done here could be done with Gaussian Processes; the
+advantages of \bsa\ are that it is conceptually simple, and that it
+has better scaling for some classes of problems.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. 
