@@ -82,6 +82,13 @@
 \newcommand\aastex{AAS\TeX}
 \newcommand\latex{La\TeX}
 
+\newcommand{\acronym}[1]{{\small{#1}}}
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\kepler}{\project{Kepler}}
+\newcommand{\tess}{\project{\acronym{TESS}}}
+\newcommand{\gaia}{\project{Gaia}}
+\newcommand{\lsst}{\project{\acronym{LSST}}}
+
 \newcommand{\normal}{\ensuremath{{\rm N}}}
 
 \newcommand{\nukl}{\ensuremath{\nu_{nk\ell}}}
@@ -96,9 +103,9 @@
 \newcommand{\rl}{\ensuremath{r_{01}}}
 
 %% Reintroduced the \received and \accepted commands from AASTeX v5.2
-\received{July 1, 2016}
-\revised{September 27, 2016}
-\accepted{\today}
+\received{TBD}
+\revised{NA}
+\accepted{NA}
 %% Command to document which AAS Journal the manuscript was submitted to.
 %% Adds "Submitted to " the arguement.
 \submitjournal{ApJ}
@@ -226,16 +233,38 @@
 
 %% Mark off the abstract in the ``abstract'' environment. 
 \begin{abstract}
-
-Things, stuff.
-
+Stellar oscillations are stochastically driven high-*Q* modes.
+If a star is observed through an observing campaign that is shorter
+than the coherence time of a mode, that mode will effectively appear
+coherent within that time interval.
+Here we exploit this to create an inexpensive probabilistic model for
+asteroseismology data.
+The huge advantage of this approach to traditional asteroseismology
+approaches is that it does not require the performance of a fourier
+transform or anything like it; this permits the measurement of
+asteroseismic parameters in data sets that are irregularly or sparsely
+sampled, or in data sets where the critical modes are near the edges
+of the available frequency space (near the inverse exposure time at
+the high-frequency end or near the inverse of the duration of the
+campaign at the low-freqency end).
+It also permits the construction of a tractable and justifiable
+likelihood function, even when the noise processes are non-trivial.
+We produce a parameterized description of an asteroseismic frequency
+spectrum and use it along with this likelihood function to produce
+posterior estimates of asteroseismic parameters for stars in the
+\kepler\ data.
+We sub-sample the \kepler\ light curves to (short duration)
+\tess-like and (sparsely sampled) \gaia-like data sets and show that
+even in these much smaller data sets, we ought to be able to estimate
+asteroseismic parameters for many stars, and (because we are just
+turning the Bayesian crank) without human intervention.
 \end{abstract}
 
 %% Keywords should appear after the \end{abstract} command. 
 %% See the online documentation for the full list of available subject
 %% keywords and the rules for their use.
-\keywords{editorials, notices --- 
-miscellaneous --- catalogs --- surveys}
+\keywords{editorials, notices --- miscellaneous --- catalogs ---
+  surveys --- methods of limited utility}
 
 %% From the front matter, we move on to the body of the paper.
 %% Sections are demarcated by \section and \subsection, respectively.
@@ -267,7 +296,7 @@ if the exposure time is varied.
 
 For another example, there is no traditional way to do
 asteroseismology with sparse-in-time data, like that which will be
-produced by LSST and Gaia.
+produced by \lsst\ and \gaia.
 
 For yet another: Time-localized outlers are death in the Fourier domain.
 
@@ -276,7 +305,7 @@ of scalars from the light curve. Do we really need to beat the light curve
 against every possible period?
 
 Finally: Stars are damned coherent. Red giants, in particular, show little
-or no sign of decoherence over the entire duration of the Kepler mission.
+or no sign of decoherence over the entire duration of the \kepler\ Mission.
 That should make life better; how?
 
 Here we capitalize on the near-coherence of the modes over reasonable
