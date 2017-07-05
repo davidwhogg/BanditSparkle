@@ -84,15 +84,24 @@
 
 \newcommand{\normal}{\ensuremath{{\rm N}}}
 
+\newcommand{\prob}{\ensuremath{\rm Pr}}
+\newcommand{\pars}{\ensuremath{\theta}}
+\newcommand{\parsnl}{\ensuremath{\theta_{\rm nl}}}
+\newcommand{\parsl}{\ensuremath{\theta_{\rm lin}}}
+
+\newcommand{\nt}{\ensuremath{n_{t}}}
+\newcommand{\nlin}{\ensuremath{n_{\rm lin}}}
+
 \newcommand{\nukl}{\ensuremath{\nu_{nk\ell}}}
 \newcommand{\nukzero}{\ensuremath{\nu_{nk0}}}
 \newcommand{\nukone}{\ensuremath{\nu_{nk1}}}
 \newcommand{\nuzero}{\ensuremath{\nu_{n00}}}
-\newcommand{\dnu}{\ensuremath{\Delta_\nu}}
+\newcommand{\dnu}{\ensuremath{\Delta\nu}}
 \newcommand{\numax}{\ensuremath{\nu_{\rm max}}}
 \newcommand{\numod}{\ensuremath{{\rm bell}}}
 \newcommand{\amps}{\ensuremath{A_{nk\ell}}}
 \newcommand{\ampc}{\ensuremath{B_{nk\ell}}}
+\newcommand{\eps}{\ensuremath{\kappa_{01}}}
 \newcommand{\rl}{\ensuremath{r_{01}}}
 
 %% Reintroduced the \received and \accepted commands from AASTeX v5.2
@@ -288,30 +297,62 @@ Fourier transform.
 
 Consider a set of $2K+1$ modes, indexed by $k \in \mathbb{Z}: -K \le k \le K$. Assuming that the $\ell = 0, 1$ modes are present, we expect a comb of $4K+2$ peaks in the power spectrum. The $\ell = 0$ modes are located at
 \begin{equation}
-\nukzero = \nuzero (1 + k \dnu), 
+\nukzero = \nuzero \, (1 + k \, \Delta), 
 \end{equation}
 with the $\ell = 1$ modes shifted to
 \begin{equation}
-\nukone = \nuzero (1 + (k + 1/2) \dnu), 
+\nukone = \nuzero \, (1 + [k + \eps] \, \Delta), 
 \end{equation}
-Each of these modes corresponds to two sinusoids
+with $\eps \simeq 1/2$. Each of these modes corresponds to two sinusoids
 \begin{equation}
-m(t) = \amps \sin(2\pi\nukl t) + \ampc \cos(2\pi\nukl t)
+m_{k\ell}(t) = \amps \, \sin(2\pi \, \nukl \, t) + \ampc \, \cos(2\pi \, \nukl \, t)
 \end{equation}
-into the stellar lightcurve. The amplitudes, $\{\amps, \ampc\}$, are normally distributed with a frequency- and $\ell$-dependent variance:
+into the stellar lightcurve, yielding $\nlin = 8K+4$ unknown amplitude parameters. The total model lightcurve (i.e., summed over $k$ and $\ell$) can be represented by
 \begin{equation}
-\amps, \ampc \sim \normal \left(\amps, \ampc; 0, \rl^\ell \sigma^2(\nukl) \right),
+m(t) = D(t, \nukl) \, \parsl
+\end{equation}
+where $D$ is an $\nt \, \times \, \nlin$ design matrix and
+\begin{equation}
+\parsl = \{ A_{n,-K,0}, B_{n,-K,0}, A_{n,-K,1}, B_{n,-K,1}, A_{n,-K+1,0}, B_{n,-K+1,0}, \ldots, A_{n,K,1}, B_{n,K,1} \}
+\end{equation}
+is a vector of amplitudes. The amplitudes are Gaussian-distributed with a frequency- and $\ell$-dependent variance; for example, 
+\begin{equation}
+\amps \sim \normal \left(\amps \, ; \, 0, \rl^\ell \, \sigma^2(\nukl) \right),
 \end{equation}
 where $\rl$, the ratio of the variances of the $\ell = 0$ and $\ell = 1$ modes with equal $k$, is approximately 1/2. The variance, $\sigma^2(\nukl)$, of the amplitudes is modulated by a bell-shaped envelope, yielding
 \begin{equation}
-\sigma^2(\nu) = \numod(\nu; \numax, W, H),
+\sigma^2(\nu) = \numod(\nu \, ; \, \numax, W, H),
 \end{equation}
 where
 \begin{equation}
-\numod(\nu; \numax, W, H) = H \exp \left( -\frac{(\nu - \numax)^2}{2 W^2} \right).
+\numod(\nu \, ; \, \numax, W, H) = H \, \exp \left( -\frac{[\nu - \numax]^2}{2 \, W^2} \right).
+\end{equation}
+This model is therefore completely described by the parameter vector $\pars = \{ \amps, \ampc, \nuzero, \Delta, \eps, \rl, \numax, W, H \}$, depending linearly on the amplitudes, $\parsl = \{\amps, \ampc\}$, and non-linearly on the remainder, $\parsnl$.
+
+In the following, we assume $K=16$, yielding a total of 132 linear parameters and seven non-linear parameters. Our aim is to recover the marginal posterior of $\numax$ and $\dnu = \nuzero \, \Delta$, which can be estimated by sampling from the full joint posterior distribution
+\begin{equation}
+\prob(\pars \, | \, d(t)) \propto \prob(\pars) \, \prob(d(t) \, | \, \pars).
+\end{equation}
+Na\"ively this involves the daunting task of sampling from a highly multimodal distribution in 140 dimensions. We can, however, greatly reduce the dimensionality by exploiting the linear dependence of the model on the amplitudes. Assuming Gaussian noise with time-domain covariance matrix $C$ yields a Gaussian likelihood function
+\begin{equation}
+\prob(d(t) \, | \, \pars) = \normal \left(d(t) \, ; \, m(t, \pars), C \right),
+\end{equation}
+which, coupled with the assumption of Gaussian-distributed amplitudes means we can pre-marginalize over them analytically, yielding
+\begin{eqnarray}
+\prob(d(t) \, | \, \parsnl) & = & \int d\parsl \, \prob(\parsl) \, \prob(d(t) \, | \, \pars) \nonumber \\
+& = & \normal \left(d(t) \, ; \, 0, V(\parsnl) \right).
+\end{eqnarray}
+Here, the modified covariance matrix $V = C + D \, \Lambda \, D^T$, where $\Lambda$ is a diagonal $\nlin^2$ matrix with non-zero entries 
+\begin{equation}
+\parsl = \{ \sigma^2(\nu_{0,-K,0}), \sigma^2(\nu_{0,-K,0}), \sigma^2(\nu_{0,-K,1}), \sigma^2(\nu_{0,-K,1}), \ldots, \sigma^2(\nu_{0,K,1}), \sigma^2(\nu_{0,K,1}) \}.
 \end{equation}
 
-This model is completely described by the parameters $\{ \amps, \ampc, \nuzero, \dnu, \rl, \numax, W, H \}$, depending linearly on the amplitudes, $\{\amps, \ampc\}$, and non-linearly on the remainder. In the following, we assume $K=16$, yielding a total of 132 linear parameters and six non-linear parameters.
+The slowest steps in evaluating this likelihood are inverting and finding the determinant of the $\nt^2$ covariance matrix $V$; however, provided $\nlin < \nt$ we can increase the speed of this step (potentially significantly: by a factor of $(\nt/\nlin)^3$) by performing low-rank updates of the data covariance: 
+\begin{eqnarray}
+V^{-1} & = & C^{-1} - C^{-1} \, D \, \left(I + \Lambda \, D^T \, C \, D \right)^{-1} \Lambda \, D^T \, C^{-1} \\
+||V|| & = & ||I + \Lambda \, D^T \, C \, D|| \, ||C||.
+\end{eqnarray}
+Using these forms of the two matrix lemmas is important, as the bell function modulating the variances of the linear amplitudes allows for singular $\Lambda$ matrices, particularly when $W$ is small.
 
 \end{document}
 
