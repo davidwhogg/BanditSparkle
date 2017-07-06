@@ -58,6 +58,7 @@ def mn_prior_full_comb_marg(cube, n_dim, n_par):
 	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+	cube[6] = ml.uniform_prior(cube[6], 0.2, 0.8)
 
 # MultiNest log-likelihood
 def mn_log_like(cube, n_dim, n_par):
@@ -102,7 +103,7 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 	# construct frequencies and their std devs
 	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, cube[0], \
 									 cube[1], cube[2], cube[3], \
-									 cube[4], cube[5])
+									 cube[4], cube[5], cube[6])
 	omegas = 2.0 * np.pi * nus
 
 	# calculate log-like
@@ -163,7 +164,7 @@ elif ml.model == 'comb_marg':
 		   n_live_points = 1000, evidence_tolerance = 0.5, \
 		   sampling_efficiency = 0.3)
 elif ml.model == 'star':
-	n_par_fit = 6
+	n_par_fit = 7
 	c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)
 	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
@@ -172,3 +173,4 @@ elif ml.model == 'star':
 		   outputfiles_basename = u'chains/test', \
 		   n_live_points = 1000, evidence_tolerance = 0.5, \
 		   sampling_efficiency = 0.3)
+	

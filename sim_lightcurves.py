@@ -19,15 +19,34 @@ mp.rcParams['lines.linewidth'] = lw
 t_min = 0.0
 t_max = 30.0 * 24.0 * 60.0 # 30 days in mins
 n_t = int((t_max - t_min) / ml.t_sample)
+constrain = True
 
 # determine accessible frequency range
 nu_min = 1.0 / (t_max - t_min)
 nu_nyq = 0.5 * (n_t - 1) / (t_max - t_min)
 
+# constrain the particular realisation if desired
+if constrain:
+	with open('test_rng_state.txt', 'r') as f:
+		lines = f.readlines()
+	f.closed
+	state = (lines[0].rstrip(), \
+			 np.array(lines[1:-3], dtype = 'uint32'), \
+			 int(lines[-3]), int(lines[-2]), float(lines[-1]))
+	np.random.set_state(state)
+else:
+	state = np.random.get_state()
+	with open('test_rng_state.txt', 'w') as f:
+		f.write(state[0] + '\n')
+		for i in range(len(state[1])):
+			f.write('{:10d}\n'.format(state[1][i]))
+		f.write('{:10d}\n'.format(state[-3]))
+		f.write('{:10d}\n'.format(state[-2]))
+		f.write('{:3.1f}\n'.format(state[-1]))
+	f.closed
+
 # generate signal parameters
 if ml.model == 'star':
-
-	npr.seed(0)
 
 	# number of modes
 	n_comp = (ml.l_max + 1) * (2 * ml.k_max + 1)
@@ -40,11 +59,12 @@ if ml.model == 'star':
 	bell_h = ml.amp_sigma ** 2
 	bell_w = d_nu * nu_0 * 4.0
 	r_01 = 0.5
+	d_k_01 = npr.uniform(0.4, 0.6)
 
 	# construct frequencies and their std devs
 	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, nu_0, \
 									 d_nu, nu_max, bell_h, \
-									 bell_w, r_01)
+									 bell_w, r_01, d_k_01)
 	'''for i in range(n_comp):
 		mp.plot([nus[i], nus[i]], [0, amp_sigmas[i] ** 2], 'k')
 	nu_grid = np.linspace(nus[0], nus[-1], 1000)
@@ -106,10 +126,10 @@ with open('test_params.txt', 'w') as f:
 		for i in range(n_comp):
 			f.write(file_fmt.format(amps[2 * i], amps[2 * i + 1]))
 	elif ml.model == 'star':
-		par_fmt = '{:19.12e} {:19.12e} {:19.12e} ' + \
+		par_fmt = '{:19.12e} {:19.12e} {:19.12e} {:19.12e} ' + \
 				  '{:19.12e} {:19.12e} {:19.12e}\n'
 		f.write(par_fmt.format(nu_0, d_nu, nu_max, bell_h, \
-							   bell_w, r_01))
+							   bell_w, r_01, d_k_01))
 		for i in range(n_comp):
 			f.write(file_fmt.format(amps[2 * i], amps[2 * i + 1]))
 f.closed
@@ -120,13 +140,13 @@ fig, axes = mp.subplots(3)
 axes[0].step(t, d)
 axes[0].set_xlim(t_min, t_max)
 axes[0].set_xlabel(r'$t [{\rm s}]$')
-axes[0].set_ylabel(r'$F [{\rm mag}]$')
-axes[1].semilogx(om, np.absolute(ft))
+axes[0].set_ylabel(r'$F [{\rm flux}]$')
+axes[1].semilogx(om, np.absolute(ft) ** 2)
 for i in range(n_comp):
 	axes[1].axvline(omegas[i], color = 'red', ls = '--')
 axes[1].set_xlim(np.min(om), np.max(om))
 axes[1].set_xlabel(r'$\omega [{\rm Hz}]$')
-axes[1].set_ylabel(r'$|F| [{\rm mag}]$')
+axes[1].set_ylabel(r'$|F|^2 [{\rm flux}^2]$')
 axes[2].semilogx(om, np.angle(ft))
 for i in range(n_comp):
 	axes[2].axvline(omegas[i], color = 'red', ls = '--')

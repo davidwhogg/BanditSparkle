@@ -19,8 +19,8 @@ elif ml.model == 'comb':
 # generate parameter labels
 labels = []
 if ml.model == 'star':
-	labels = [r'$\nu_{n00}$', r'$\Delta_\nu$', r'$\nu_{\rm max}$', \
-			  r'$H$', r'$W$', r'$r_{01}$']
+	labels = [r'$\nu_{n00}$', r'$\Delta$', r'$\nu_{\rm max}$', \
+			  r'$H$', r'$W$', r'$r_{01}$', r'$\kappa_{01}$']
 elif ml.model == 'comb' or ml.model == 'comb_marg':
 	labels = [r'$\omega_0$', r'$\Delta\omega$']
 if ml.model == 'ind' or ml.model == 'comb':
@@ -118,4 +118,32 @@ if use_corner:
 										color='red', ls=':', \
 										lw = 1.5)
 	mp.savefig('test_posterior.pdf')
+
+	# produce corner plot for parameters of interest
+	if ml.model == 'star':
+
+		# \Delta_\nu is a derived parameter
+		i_nu_0, i_delta, i_nu_max = (0, 1, 2)
+		s_marg = np.zeros((n_s, 2))
+		s_marg[:, 0] = s[:, i_nu_0] * s[:, i_delta]
+		s_marg[:, 1] = s[:, i_nu_max]
+		p_true_marg = [ p_true[i_nu_0] * p_true[i_delta], \
+						p_true[i_nu_max] ]
+		n_p_marg = len(p_true_marg)
+		labels_marg = [ r'$\Delta_\nu$', r'$\nu_{\rm max}$' ]
+		fig = co.corner(s_marg, bins = 50, labels = labels_marg, \
+						plot_density = False, plot_contours = False, \
+						no_fill_contours = True)
+		for i in range(n_p_marg):
+			for j in range(i):
+				a_ind = i * n_p_marg + j
+				fig.axes[a_ind].axhline(p_true_marg[i], \
+										color='red', ls=':', \
+										lw = 1.5)
+			for j in range(i + 1):
+				a_ind = i * n_p_marg + j
+				fig.axes[a_ind].axvline(p_true_marg[j], \
+										color='red', ls=':', \
+										lw = 1.5)
+		mp.savefig('test_posterior_marg.pdf')
 

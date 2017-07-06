@@ -43,19 +43,14 @@ def des_mat(time, omega):
 
 # generate comb of frequencies and their variances
 def comb_freq_var(k_max, l_max, nu_0, d_nu, nu_max, bell_h, bell_w, \
-				  r_01):
+				  r_01, d_k_01 = 0.5):
 
-	# @TODO: QUESTIONS TO ASK
-	# 1 - is the variance at ell=1 half that of the ell=0 mode or 
-	#     half the bell curve at nu_nk1?
-	# 2 - am i drawing the amps from the variances correctly? i don't
-	#     think i should be adjusting by 1/2
 	n_comp = (l_max + 1) * (2 * k_max + 1)
 	ks = np.zeros(n_comp)
 	ind = 0
 	for k in range(-k_max, k_max + 1):
 		for el in range(l_max + 1):
-			ks[ind] = k + el * 0.5
+			ks[ind] = k + el * d_k_01
 			ind += 1
 	els = np.mod(np.arange(n_comp), 2)
 	nus = nu_0 * (1.0 + ks * d_nu)
