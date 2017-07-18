@@ -1,7 +1,8 @@
 
 
+
 """
-Simulate light curves for KIC 12008916
+Simulate light curves for test star 6 of http://iopscience.iop.org/article/10.1088/0004-637X/710/2/1596/pdf
 """
 
 import numpy as np
@@ -13,17 +14,16 @@ from matplotlib.ticker import MaxNLocator
 import mod_lightcurves as ml
 import cadence
 
-
 np.random.seed(123)
 
 
-object_name = "KIC12008916"
+object_name = "TS6"
 
-# Davies et al. (2016) -- https://arxiv.org/pdf/1601.02802.pdf
-nu_max = 160.9e-6 # [Hz]
-error_nu_max = 0.5e-6 # [Hz]
-delta_nu = 12.89e-6 # [Hz]
-error_delta_nu = 3e-6 # [Hz]
+
+nu_max = 21.0e-6 # [Hz]
+error_nu_max = 0.2e-6
+delta_nu = 2.2e-6 # [Hz]
+error_delta_nu = 0.05e-6 # [Hz]
 
 
 
@@ -94,8 +94,8 @@ latex_labels = {
 
 grid_bounds = [
     # parameter_name, figure_prefix, grid_start, grid_end, grid_number
-    ("nu_max", "nu_max", 100e-6, 260e-6, 1000),
-    ("delta_nu", "delta_nu", 8e-6, 22e-6, 1000),
+    ("nu_max", "nu_max", 1e-6, 260e-6, 1000),
+    ("delta_nu", "delta_nu", 1e-6, 22e-6, 1000),
     ("nu_max", "nu_max_zoom", nu_max - 5e-6, nu_max + 5e-6, 1000),
     ("bell_h", "bell_h", 0.5 * bell_h, 2 * bell_h, 50),
     ("bell_w", "bell_w", 0.5 * bell_w, 2 * bell_w, 50),
@@ -103,9 +103,7 @@ grid_bounds = [
 ]
 
 cadences = [
-    #("Gaia", cadence.gaia("{}_gaia_forecast.csv".format(object_name))),
-    #("TESS", cadence.tess()),
-    ("Gaia (equispaced)", np.linspace(0, cadence.gaia("{}_gaia_forecast.csv".format(object_name))[-1], 5000)),
+    ("Gaia", cadence.gaia("KIC12008916_gaia_forecast.csv")),
 ]
 
 for cadence, t in cadences:
@@ -202,6 +200,3 @@ for cadence, t in cadences:
 # [ ] Repeat all for another observing cadence near the poles
 # [ ] Repeat for the same star using LOTS of gaia observations
 # [ ] Assign the amplitudes of the frequencies so that photometric precision can be related
-
-
-

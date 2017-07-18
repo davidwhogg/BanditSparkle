@@ -1,7 +1,8 @@
 
 
+
 """
-Simulate light curves for KIC 12008916
+Simulate light curves for test star 5 of http://iopscience.iop.org/article/10.1088/0004-637X/710/2/1596/pdf
 """
 
 import numpy as np
@@ -13,17 +14,17 @@ from matplotlib.ticker import MaxNLocator
 import mod_lightcurves as ml
 import cadence
 
-
 np.random.seed(123)
 
 
-object_name = "KIC12008916"
+object_name = "TS5"
 
-# Davies et al. (2016) -- https://arxiv.org/pdf/1601.02802.pdf
-nu_max = 160.9e-6 # [Hz]
-error_nu_max = 0.5e-6 # [Hz]
-delta_nu = 12.89e-6 # [Hz]
-error_delta_nu = 3e-6 # [Hz]
+
+nu_max = 541e-6 # [Hz]
+error_nu_max = 1e-6
+delta_nu = 33.73e-6 # [Hz]
+error_delta_nu = 0.5e-6 # [Hz]
+
 
 
 
@@ -103,9 +104,7 @@ grid_bounds = [
 ]
 
 cadences = [
-    #("Gaia", cadence.gaia("{}_gaia_forecast.csv".format(object_name))),
-    #("TESS", cadence.tess()),
-    ("Gaia (equispaced)", np.linspace(0, cadence.gaia("{}_gaia_forecast.csv".format(object_name))[-1], 5000)),
+    ("Gaia", cadence.gaia("KIC12008916_gaia_forecast.csv")),
 ]
 
 for cadence, t in cadences:
@@ -202,6 +201,3 @@ for cadence, t in cadences:
 # [ ] Repeat all for another observing cadence near the poles
 # [ ] Repeat for the same star using LOTS of gaia observations
 # [ ] Assign the amplitudes of the frequencies so that photometric precision can be related
-
-
-
