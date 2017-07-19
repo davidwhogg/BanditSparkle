@@ -3,8 +3,10 @@ import numpy as np
 from astropy.table import Table
 
 
+__all__ = ["tess", "gaia", "kepler", "k2_short_cadence", "k2_long_cadence"]
+
 def tess(n=2500):
-    return np.linspace(0, 30 * 24 * 60, n)
+    return np.linspace(0, 30 * 24 * 60, 1440)
 
 
 def gaia(path):
@@ -23,3 +25,29 @@ def gaia(path):
     first = dateutil.parser.parse(gaia_forecast[gaia_obs_time_column][0])
     return np.array([(dateutil.parser.parse(v) - first).total_seconds() \
             for v in gaia_forecast[gaia_obs_time_column]])
+
+
+def kepler():
+    r"""
+    Return an array of observation times (in seconds) for Kepler long 
+    cadence of 30 minute observations over 4 years.
+    """
+    return np.arange(0, 4 * 365 * 24 * 60 * 60, 30 * 60)
+
+
+def k2_short_cadence():
+    r"""
+    Return an array of observing times (in seconds) for K2 short cadence
+    observations (1 minute observations for 90 days).
+    """
+    exp = 60
+    return np.arange(0, 90 * 24 * 60 * 60 + exp, exp)
+
+
+def k2_long_cadence():
+    r"""
+    Return an array of observing times (in seconds) for K2 long cadence
+    observations (30 minute exposures for 90 days).
+    """
+    exp = 30 * 60
+    return np.arange(0, 90 * 24 * 60 * 60 + exp, exp)
