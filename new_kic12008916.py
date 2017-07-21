@@ -1,5 +1,6 @@
 
-import os
+
+
 import itertools
 import numpy as np
 from collections import OrderedDict
@@ -8,6 +9,18 @@ from time import time
 
 import cadence
 from model import AsteroseismicModel
+
+
+
+
+
+# Davies et al. (2016) -- https://arxiv.org/pdf/1601.02802.pdf
+object_name = "KIC 12008916"
+
+nu_max = 160.9e-6 # [Hz]
+nu_max_error = 0.5e-6 # [Hz]
+delta_nu = 12.89e-6 # [Hz]
+delta_nu_error = 3e-6 # [Hz]
 
 
 FIGURES_PATH = "figures_20170720"
@@ -20,20 +33,16 @@ def savefigs(fig, basename):
     fig.savefig("{}/{}.pdf".format(FIGURES_PATH, basename), dpi=300)
 
 
-object_name = "KIC 9145955"
-nu_max, nu_max_error = (129.69e-6, 2.52e-6) # [Hz]
-delta_nu, delta_nu_error = (10.93e-6, 0.23e-6) # [Hz]
-
 
 apokasc_value = {
     "nu_max": (nu_max, nu_max_error),
     "delta_nu": (delta_nu, delta_nu_error)
 }
 
-power_spectrum = Table.read("KIC009145955_d22_v1.fits")
+power_spectrum = Table.read("KIC12008916_d22_v1.fits")
 
 
-light_curve = Table.read("KIC009145955_d21_v1.fits")
+light_curve = Table.read("KIC12008916_d21_v1.fits")
 light_curve["TIME"] -= np.min(light_curve["TIME"]) 
 light_curve["TIME"] *= 24 * 60.* 60 # convert date tto seconds
 light_curve["FLUX"] *= 1e-12 # convert to mags
@@ -51,7 +60,7 @@ axes[1].plot(omega * 1e6, np.abs(ft)**2)
 axes[2].plot(omega, np.angle(ft, deg=True))
 
 # Plot some data.
-axes[1].semilogx(
+axes[1].plot(
     power_spectrum["FREQUENCY"], power_spectrum["PSD"],
     c='k', zorder=-1)
 
@@ -100,8 +109,8 @@ t, y, yerr = data[cadence_name]
 
 
 fiducial_value = OrderedDict([
-    ("nu_0", 129.57e-6),
-    ("delta_nu", 10.87e-6),
+    ("nu_0", nu_max),
+    ("delta_nu", delta_nu),
     ("nu_max", nu_max),
     ("bell_height", None),
     ("bell_width", 10e-6),
@@ -193,7 +202,6 @@ for i, (parameter_name, value) in enumerate(fiducial_value.items()):
     fig.tight_layout()
     savefigs(fig, "{}_{}_{}_grid".format(object_name, cadence_name, parameter_name))
 
-
 # Update the fiducial values.
 new_fiducial_value = fiducial_value.copy()
 for i, (key, value) in enumerate(new_fiducial_value.items()):
@@ -247,5 +255,6 @@ for k, (parameter_name, grid_points) in enumerate(plot_grids):
 
 
 raise a
+
 
 

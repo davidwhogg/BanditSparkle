@@ -1,11 +1,10 @@
-import dateutil
 import numpy as np
 from astropy.table import Table
-
+from dateutil import parser as dateutil
 
 __all__ = ["tess", "gaia", "kepler", "k2_short_cadence", "k2_long_cadence"]
 
-def tess(n=2500):
+def tess():
     return np.linspace(0, 30 * 24 * 60, 1440)
 
 
@@ -22,8 +21,8 @@ def gaia(path):
     gaia_forecast = Table.read(path, format="csv")
 
     # Predict the magnitude changes at the observed (delta) times.
-    first = dateutil.parser.parse(gaia_forecast[gaia_obs_time_column][0])
-    return np.array([(dateutil.parser.parse(v) - first).total_seconds() \
+    first = dateutil.parse(gaia_forecast[gaia_obs_time_column][0])
+    return np.array([(dateutil.parse(v) - first).total_seconds() \
             for v in gaia_forecast[gaia_obs_time_column]])
 
 
