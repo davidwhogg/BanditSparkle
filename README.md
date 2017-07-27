@@ -2,9 +2,10 @@
 in bad data, even incoherent modes look coherent
 
 ## Authors
-- **Stephen Feeney** (Flatiron)
+- **Stephen M. Feeney** (Flatiron)
 - **David W. Hogg** (NYU) (Flatiron) (MPIA)
 - **Andrew R. Casey** (Monash)
+- **Ana Bonaca** (Harvard)
 
 ## License
 Copyright 2017 the authors. **All rights reserved**. Everything will be released under a sensible license, and soon.
