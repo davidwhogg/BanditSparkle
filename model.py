@@ -1,38 +1,85 @@
-"""
-Forward-model light curves for giant stars with Solar-like oscillators.
-"""
+# -*- coding: utf-8 -*-
 
+from __future__ import division, print_function
 import numpy as np
-import logging
-
-logging.basicConfig(level=logging.INFO)
 
 
 class AsteroseismicModel(object):
 
-    def __init__(self):
+    """
+    Forward-model light curves for giant stars with Solar-like oscillations.
+    """
+
+    def __init__(self, *args, **kwargs):
         return None
-
-
-    def __call__(self, *args, **kwargs):
-        return self.predict_light_curve(self, *args, **kwargs)
 
 
     def predict_power_spectrum(self, t, nu_max, delta_nu, **kwargs):
         r"""
-        Predict the power spectrum for a given star.
+        Predict the power spectrum for a given star. 
+
+        Keyword arguments are passed directly to 
+        :func:`AsteroseismicModel.predict_light_curve`.
+
+        :param t:
+            The times that the data were observed [seconds].
+
+        :param nu_max:
+            The frequency of maximum power [Hz].
+
+        :param delta_nu:
+            The large period separation [Hz].
         """
 
         # TODO HACK ASSUMES EVEN OBSERVATIONS
         omega = np.fft.rfftfreq(t.size, np.ptp(t)/t.size)
-        ft = np.fft.rfft(self.predict_light_curve(t, nu_max, delta_nu, **kwargs))
-
-        return (omega, ft)
+        f = np.fft.rfft(self.predict_light_curve(t, nu_max, delta_nu, **kwargs))
+        return (omega, f)
 
 
     def comb_frequencies(self, nu_max, delta_nu, l_max=1, k_max=16, 
         r_01=0.5, amp_sigma=0.7, d_k_01=0.5, nu_0=None, bell_height=None, 
         bell_width=None, exposure_times=None, **kwargs):
+        r"""
+        Produce a comb of asteroseismic frequencies.
+
+        :param t:
+            The times that the data were observed [seconds].
+
+        :param nu_max:
+            The frequency of maximum power [Hz].
+
+        :param delta_nu:
+            The large period separation [Hz].
+
+        :param l_max: [optional]
+            The maximum number of l-modes to model (default: 1).
+
+        :param k_max: [optional]
+            The maximum number of k-modes to model (default: 16).
+
+        :param r_01: [optional]
+            The ratio of peak powers between zero-order and first-order modes
+            (default: 0.5).
+
+        :param amp_sigma: [optional]
+            The intrinsic scatter in amplitudes (default: 0.7).
+
+        :param d_k_01: [optional]
+            The scale of spacing between small modes (default: 0.5).
+
+        :param nu_0: [optional]
+            The position of the strongest mode in the power spectrum [Hz].
+            If ``None`` is given, then this will default to ``nu_max``.
+
+        :param bell_height: [optional]
+            The height of the power bell [Hz]. If ``None`` is given, then this
+            defaults to ``amp_sigma**2``.
+
+        :param bell_width: [optional]
+            The width of the power bell [Hz]. If ``None`` is given, then this
+            defaults to ``4 * delta_nu * nu_0``.
+        """
 
         nu_0 = nu_0 or nu_max
         bell_height = bell_height or amp_sigma**2
@@ -63,6 +110,7 @@ class AsteroseismicModel(object):
         Predict the light curve for the given observation times.
 
         :param t:
+            The times that the data were observed [seconds].
 
         :param nu_max:
             The frequency of maximum power [Hz].
@@ -76,8 +124,31 @@ class AsteroseismicModel(object):
         :param k_max: [optional]
             The maximum number of k-modes to model (default: 16).
 
-        # TODO
+        :param r_01: [optional]
+            The ratio of peak powers between zero-order and first-order modes
+            (default: 0.5).
+
+        :param amp_sigma: [optional]
+            The intrinsic scatter in amplitudes (default: 0.7).
+
+        :param d_k_01: [optional]
+            The scale of spacing between small modes (default: 0.5).
+
+        :param nu_0: [optional]
+            The position of the strongest mode in the power spectrum [Hz].
+            If ``None`` is given, then this will default to ``nu_max``.
+
+        :param bell_height: [optional]
+            The height of the power bell [Hz]. If ``None`` is given, then this
+            defaults to ``amp_sigma**2``.
+
+        :param bell_width: [optional]
+            The width of the power bell [Hz]. If ``None`` is given, then this
+            defaults to ``4 * delta_nu * nu_0``.
         """
+
+        if exposure_times is not None:
+            raise NotImplementedError("exposure times not implemented yet")
 
         # Default values for nu_0, bell_width, bell_height
         nus, amp_vars = self.comb_frequencies(nu_max, delta_nu, l_max=l_max,
@@ -99,7 +170,20 @@ class AsteroseismicModel(object):
         return fluxes
 
 
+    def __call__(self, *args, **kwargs):
+        return self.predict_light_curve(self, *args, **kwargs)
+
+
     def _pre_compute_covariance_matrices(self, residual_flux_err):
+        """
+        Pre compute the inverse of the observed covariance matrix and the 
+        sum of the log of the determinant of the observed covariance matrix in
+        order to speed up repeated marginalized log likelihood calls using
+        the same flux errors.
+
+        :param residual_flux_err:
+            An array of uncertainties on the residual fluxes.
+        """
 
         residual_flux_err = np.atleast_1d(residual_flux_err)
         N = residual_flux_err.size
@@ -124,15 +208,22 @@ class AsteroseismicModel(object):
             bell_height, bell_width, $r_{01}$).
 
         :param t:
-            The observation times.
+            The times that the data were observed [seconds].
 
         :param residual_flux:
             The residual flux values for each observation, after subtracting the
-            median flux.
+            median flux [mags].
 
-        :param ivar:
-            The inverse variances of the residual flux values for each
-            observation.
+        :param residual_flux_err: [optional]
+            The uncertainties in the residual fluxes from cadence photometry.
+            If `None` is supplied, then it is assumed that the required
+            matrices have been pre-computed using 
+            :func:`AsteroseismicModel._pre_compute_covariance_matrices`,
+            otherwise an exception will be raised.
+
+        :raises ValueError:
+            If no residual flux values are provided and the required matrices
+            have not been pre-computed.
         """
 
         nu_0, delta_nu, nu_max, bell_height, bell_width, r_01 = theta
@@ -178,7 +269,6 @@ def _design_matrix(t, omega):
 
 def _update_inv_det(c_mat_inv, c_mat_log_det, b_mat, par_vars):
 
-    logging.debug("_update_inv_det entry")
     # @TODO: speed up multiplication by diagonal matrix
     # @TODO: speed up addition with diagonal matrix
 
@@ -187,27 +277,21 @@ def _update_inv_det(c_mat_inv, c_mat_log_det, b_mat, par_vars):
     q_mat_inv = np.dot(b_mat.T, np.dot(c_mat_inv, b_mat))
     a_mat = np.eye(len(par_vars)) + np.dot(lambda_mat, q_mat_inv)
 
-    logging.debug("_update_inv_det a_mat")
 
     # update inverse
     a_mat_inv_lambda = np.dot(np.linalg.inv(a_mat), lambda_mat)
     c_inv_b = np.dot(c_mat_inv, b_mat)
 
-    logging.debug("_update_inv_det c_inv_b")
-    logging.debug("_update_inv_det c_inv_b {} {}".format(
         c_inv_b.shape, a_mat_inv_lambda.shape))
 
     foo = np.dot(a_mat_inv_lambda, c_inv_b.T)
-    logging.debug("_update_inv_det foo {} {}".format(c_inv_b.shape, foo.shape))
 
     out_inv = c_mat_inv - np.dot(c_inv_b, foo)
 
-    logging.debug("_update_inv_det out_inv")
 
     # update determinant
     out_log_det = np.linalg.slogdet(a_mat)[1] + c_mat_log_det
 
-    logging.debug("_update_inv_det out_log_det")
 
     return out_inv, out_log_det
 
