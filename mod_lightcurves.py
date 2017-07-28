@@ -2,6 +2,7 @@ import numpy as np
 import scipy.special as ss
 
 # settings
+opt = False
 t_sample = 30.0
 t_int = 30.0 # integration time per sample
 tau_min = 3.0 * 60.0 # mins

@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as mp
 import mod_lightcurves as ml
+import scipy.optimize as so
 
 # pyMultiNest imports
 #from __future__ import absolute_import, unicode_literals, print_function
@@ -113,7 +114,10 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 												  b_mat, \
 												  amp_vars)
 	log_like = np.dot(d.T, np.dot(v_inv_mat, d)) + log_det
-	return -0.5 * log_like
+	if ml.opt:
+		return log_like
+	else:
+		return -0.5 * log_like
 
 # read data
 td = np.genfromtxt('test_lightcurve.txt')
@@ -168,9 +172,26 @@ elif ml.model == 'star':
 	c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)
 	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
-	mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
-		   n_par_fit, resume = False, verbose = True, \
-		   outputfiles_basename = u'chains/test', \
-		   n_live_points = 1000, evidence_tolerance = 0.5, \
-		   sampling_efficiency = 0.3)
+	if ml.opt:
+		x0 = (2.071229237821e-03, 5.977924454460e-02, \
+			  2.071229237821e-03, 4.900000000000e-01, \
+			  4.952660764624e-04, 5.000000000000e-01, \
+			  3.333333333333e-01)
+		results = so.minimize(mn_log_like_full_comb_marg, x0, \
+							  args = (n_par_fit, n_par_fit), \
+							  method = 'Nelder-Mead', \
+							  options = {'maxfev': 10000})
+		if results.success:
+			print 'converged ({:d} func evals)'.format(results.nfev)
+			print 'minimum:'
+			print results.x
+			print 'loglike: {:19.12e}'.format(-0.5 * results.fun)
+		else:
+			print results
+	else:
+		mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
+			   n_par_fit, resume = False, verbose = True, \
+			   outputfiles_basename = u'chains/test', \
+			   n_live_points = 1000, evidence_tolerance = 0.5, \
+			   sampling_efficiency = 0.3)
 	
