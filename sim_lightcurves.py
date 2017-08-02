@@ -17,7 +17,7 @@ mp.rcParams['lines.linewidth'] = lw
 
 # settings
 t_min = 0.0
-t_max = 30.0 * 24.0 * 60.0 # 30 days in mins
+t_max = 30.0 * 24.0 * 3600.0 # 30 days in s
 n_t = int((t_max - t_min) / ml.t_sample)
 constrain = True
 
@@ -141,16 +141,16 @@ axes[0].step(t, d)
 axes[0].set_xlim(t_min, t_max)
 axes[0].set_xlabel(r'$t [{\rm s}]$')
 axes[0].set_ylabel(r'$F [{\rm flux}]$')
-axes[1].semilogx(om, np.absolute(ft) ** 2)
+axes[1].semilogx(om * 1e6, np.absolute(ft) ** 2)
 for i in range(n_comp):
-	axes[1].axvline(omegas[i], color = 'red', ls = '--')
-axes[1].set_xlim(np.min(om), np.max(om))
-axes[1].set_xlabel(r'$\omega [{\rm Hz}]$')
+	axes[1].axvline(omegas[i] * 1e6, color = 'red', ls = '--')
+axes[1].set_xlim(np.min(om) * 1e6, np.max(om) * 1e6)
+axes[1].set_xlabel(r'$\omega [{\rm \mu Hz}]$')
 axes[1].set_ylabel(r'$|F|^2 [{\rm flux}^2]$')
-axes[2].semilogx(om, np.angle(ft))
+axes[2].semilogx(om * 1e6, np.angle(ft))
 for i in range(n_comp):
-	axes[2].axvline(omegas[i], color = 'red', ls = '--')
-axes[2].set_xlim(np.min(om), np.max(om))
-axes[2].set_xlabel(r'$\nu [{\rm Hz}]$')
+	axes[2].axvline(omegas[i] * 1e6, color = 'red', ls = '--')
+axes[2].set_xlim(np.min(om) * 1e6, np.max(om) * 1e6)
+axes[2].set_xlabel(r'$\omega [{\rm \mu Hz}]$')
 axes[2].set_ylabel(r'$\phi [{\rm rad}]$')
 mp.savefig('test_input_plots.pdf', box_inches = 'tight')

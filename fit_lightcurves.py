@@ -46,16 +46,15 @@ def mn_prior_comb_marg(cube, n_dim, n_par):
 # MultiNest full comb prior, marginalized over amps
 def mn_prior_full_comb_marg(cube, n_dim, n_par):
 
-	# nu_0, d_nu, nu_max, bell_h, bell_w, r_01
+	# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
 	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
 								ml.d_omega_sigma / 5.0)
-
-
 	cube[2] = ml.log_uniform_prior(cube[2], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
-	cube[3] = ml.log_uniform_prior(cube[3], -2.0, 1.0)
+	#cube[3] = ml.log_uniform_prior(cube[3], -2.0, 1.0)
+	cube[3] = ml.log_uniform_prior(cube[3], 4.0, 6.0)
 	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
@@ -119,11 +118,19 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 	else:
 		return -0.5 * log_like
 
+# sims or data?
+cat_id = 1162746 # or None
+
 # read data
-td = np.genfromtxt('test_lightcurve.txt')
+if cat_id is not None:
+	td = np.genfromtxt('test_{:d}_lightcurve.txt'.format(cat_id))
+else:
+	td = np.genfromtxt('test_lightcurve.txt')
 n_t = td.shape[0]
 t = td[:, 0]
 d = td[:, 1]
+if cat_id is not None:
+	e = td[:, 2]
 
 # create chains directory if needed
 if not os.path.exists("chains"): os.mkdir("chains")
@@ -169,14 +176,20 @@ elif ml.model == 'comb_marg':
 		   sampling_efficiency = 0.3)
 elif ml.model == 'star':
 	n_par_fit = 7
-	c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
+	if cat_id is not None:
+		c_mat = np.diag(e ** 2 * 722.597) # coloured noise boost
+	else:
+		c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)
 	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
 	if ml.opt:
-		x0 = (2.071229237821e-03, 5.977924454460e-02, \
-			  2.071229237821e-03, 4.900000000000e-01, \
-			  4.952660764624e-04, 5.000000000000e-01, \
-			  3.333333333333e-01)
+		#x0 = (2.071229237821e-03, 5.977924454460e-02, \
+		#	  2.071229237821e-03, 4.900000000000e-01, \
+		#	  4.952660764624e-04, 5.000000000000e-01, \
+		#	  3.333333333333e-01)
+		# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
+		x0 = (26.30e-6, 3.82e-6, 27.98e-6, 240000.0, \
+			  4.95e-04, 0.5, 0.5)
 		results = so.minimize(mn_log_like_full_comb_marg, x0, \
 							  args = (n_par_fit, n_par_fit), \
 							  method = 'Nelder-Mead', \

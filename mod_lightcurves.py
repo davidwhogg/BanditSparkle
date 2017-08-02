@@ -3,10 +3,10 @@ import scipy.special as ss
 
 # settings
 opt = False
-t_sample = 30.0
-t_int = 30.0 # integration time per sample
-tau_min = 3.0 * 60.0 # mins
-tau_max = 300.0 * 60.0
+t_sample = 30.0 * 60.0
+t_int = 30.0 * 60.0 # integration time per sample
+tau_min = 3.0 * 3600.0
+tau_max = 300.0 * 3600.0
 log_tau_min = np.log10(tau_min)
 log_tau_max = np.log10(tau_max)
 l_max = 1
