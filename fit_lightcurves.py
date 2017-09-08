@@ -54,7 +54,7 @@ def mn_prior_full_comb_marg(cube, n_dim, n_par):
 	cube[2] = ml.log_uniform_prior(cube[2], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	#cube[3] = ml.log_uniform_prior(cube[3], -2.0, 1.0)
-	cube[3] = ml.log_uniform_prior(cube[3], 4.0, 6.0)
+	cube[3] = ml.log_uniform_prior(cube[3], 1.0, 3.0)
 	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
