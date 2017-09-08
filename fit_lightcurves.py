@@ -177,7 +177,11 @@ elif ml.model == 'comb_marg':
 elif ml.model == 'star':
 	n_par_fit = 7
 	if cat_id is not None:
-		c_mat = np.diag(e ** 2 * 722.597) # coloured noise boost
+		#c_mat = np.diag(e ** 2 * 722.597) # coloured noise boost
+		p_opt = np.genfromtxt('test_{:d}_autocorr_fit.txt'.format(cat_id))
+		n_samples = len(t)
+		k_mat = ml.col_noise_cov_mat(t, *p_opt)
+		c_mat = np.diag(e ** 2) + k_mat
 	else:
 		c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)
@@ -188,7 +192,7 @@ elif ml.model == 'star':
 		#	  4.952660764624e-04, 5.000000000000e-01, \
 		#	  3.333333333333e-01)
 		# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
-		x0 = (26.30e-6, 3.82e-6, 27.98e-6, 240000.0, \
+		x0 = (26.30e-6, 0.14, 27.98e-6, 500.0, \
 			  4.95e-04, 0.5, 0.5)
 		results = so.minimize(mn_log_like_full_comb_marg, x0, \
 							  args = (n_par_fit, n_par_fit), \
