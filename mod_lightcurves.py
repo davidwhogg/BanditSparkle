@@ -109,3 +109,16 @@ def update_inv_det_stable(c_mat_inv, c_mat_log_det, b_mat, par_vars):
 	out_log_det = np.linalg.slogdet(a_mat)[1] + c_mat_log_det
 	return out_inv, out_log_det
 
+def laplace(x, amp, timescale):
+	return amp * np.exp(-np.abs(x) / timescale)
+
+def autocorrelate(x):
+	return np.correlate(x, x, mode='full') / (len(x) - 1)
+
+def col_noise_cov_mat(times, amp, timescale):
+	n_samples = len(times)
+	k_mat = np.zeros((n_samples, n_samples))
+	for i in range(n_samples):
+		k_mat[i, :] = laplace(times[i] - times, amp, timescale)
+	return k_mat
+
