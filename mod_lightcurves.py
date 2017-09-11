@@ -22,6 +22,7 @@ amp_max = 0.6
 amp_mu = 0.0
 amp_sigma = 0.7
 noise_sigma = 2.0
+coloured_noise = True
 n_p = 3
 model = 'star' # 'star', comb_marg', comb' or 'ind'
 
@@ -121,4 +122,10 @@ def col_noise_cov_mat(times, amp, timescale):
 	for i in range(n_samples):
 		k_mat[i, :] = laplace(times[i] - times, amp, timescale)
 	return k_mat
+
+def col_noise(cov_mat, decomposed=False):
+	if not decomposed:
+		cov_mat = np.linalg.cholesky(cov_mat)
+	wn = np.random.randn(cov_mat.shape[0])
+	return np.dot(cov_mat, wn)
 

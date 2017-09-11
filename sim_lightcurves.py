@@ -57,6 +57,8 @@ if ml.model == 'star':
 	d_nu = npr.normal(ml.d_omega_mu, ml.d_omega_sigma) / 5.0
 	nu_max = nu_0
 	bell_h = ml.amp_sigma ** 2
+	if ml.coloured_noise:
+		bell_h *= 8000#2000
 	bell_w = d_nu * nu_0 * 4.0
 	r_01 = 0.5
 	d_k_01 = npr.uniform(0.4, 0.6)
@@ -98,7 +100,12 @@ t = np.linspace(t_min, t_max, n_t)
 d = np.zeros(n_t)
 for i in range(n_comp):
 	d += ml.lightcurve(t, amps[2 * i], amps[2 * i + 1], omegas[i])
-d += npr.normal(0.0, ml.noise_sigma, n_t)
+if ml.coloured_noise:
+	k_mat = ml.col_noise_cov_mat(t, 67500.0, 45500.0)
+	d += ml.col_noise(k_mat)
+	d += npr.normal(0.0, 18.3, n_t)
+else:
+	d += npr.normal(0.0, ml.noise_sigma, n_t)
 
 # cheeky FFT
 ft = np.fft.rfft(d)
@@ -141,7 +148,10 @@ axes[0].step(t, d)
 axes[0].set_xlim(t_min, t_max)
 axes[0].set_xlabel(r'$t [{\rm s}]$')
 axes[0].set_ylabel(r'$F [{\rm flux}]$')
-axes[1].semilogx(om * 1e6, np.absolute(ft) ** 2)
+if ml.coloured_noise:
+	axes[1].loglog(om * 1e6, np.absolute(ft) ** 2)
+else:
+	axes[1].semilogx(om * 1e6, np.absolute(ft) ** 2)
 for i in range(n_comp):
 	axes[1].axvline(omegas[i] * 1e6, color = 'red', ls = '--')
 axes[1].set_xlim(np.min(om) * 1e6, np.max(om) * 1e6)

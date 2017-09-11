@@ -119,7 +119,7 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 		return -0.5 * log_like
 
 # sims or data?
-cat_id = 1162746 # or None
+cat_id = None #1162746 # or None
 
 # read data
 if cat_id is not None:
@@ -179,9 +179,11 @@ elif ml.model == 'star':
 	if cat_id is not None:
 		#c_mat = np.diag(e ** 2 * 722.597) # coloured noise boost
 		p_opt = np.genfromtxt('test_{:d}_autocorr_fit.txt'.format(cat_id))
-		n_samples = len(t)
 		k_mat = ml.col_noise_cov_mat(t, *p_opt)
 		c_mat = np.diag(e ** 2) + k_mat
+	elif ml.coloured_noise:
+		k_mat = ml.col_noise_cov_mat(t, 67500.0, 45500.0)
+		c_mat = np.diag(np.ones(n_t) * 18.3 ** 2) + k_mat
 	else:
 		c_mat = np.diag(np.ones(n_t) * ml.noise_sigma ** 2)
 	c_mat_inv = np.linalg.inv(c_mat)

@@ -113,9 +113,7 @@ np.savetxt('test_{:d}_autocorr_fit.txt'.format(target), \
 # optionally generate noise realization from k_mat
 if cn_realisation:
 	k_mat = ml.col_noise_cov_mat(time, *p_opt)
-	k_mat_chol = np.linalg.cholesky(k_mat)
-	wn = np.random.randn(n_samples)
-	cn = np.dot(k_mat_chol, wn)
+	cn = ml.col_noise(k_mat)
 	cn_autocorr = ml.autocorrelate(cn)
 
 # plot!
