@@ -3,6 +3,7 @@ import matplotlib.pyplot as mp
 import mod_lightcurves as ml
 
 # settings
+cat_id = 1162746
 use_corner = True
 
 # read in chains. column structure is 
@@ -32,7 +33,11 @@ if ml.model == 'ind' or ml.model == 'comb':
 
 # read in ground truth
 if ml.model == 'star':
-	with open('test_params.txt', 'r') as f:
+	if cat_id is not None:
+		par_file = 'test_{:d}'.format(cat_id) + '_params.txt'
+	else:
+		par_file = 'test_params.txt'
+	with open(par_file, 'r') as f:
 		p_true = []
 		for p in f.readline().split():
 			p_true.append(float(p))
@@ -52,6 +57,15 @@ if use_corner:
 	if ml.model == 'ind':
 		for i in range(n_comp_fit):
 			s[:, stride*i+2] = np.log10(s[:, stride*i+2])
+	elif ml.model == 'star':
+		s[:, 0] *= 1.0e6
+		s[:, 2] *= 1.0e6
+		s[:, 3] = np.log10(s[:, 3])
+		s[:, 4] *= 1.0e6
+		p_true[0] *= 1.0e6
+		p_true[2] *= 1.0e6
+		p_true[3] = np.log10(p_true[3])
+		p_true[4] *= 1.0e6
 	#elif ml.model == 'comb':
 	#	s[:, 0] = np.log10(s[:, 0])
 	fig = co.corner(s, bins = 50, labels = labels, \
