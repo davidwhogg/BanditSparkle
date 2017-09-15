@@ -2,7 +2,7 @@ import numpy as np
 import scipy.special as ss
 
 # settings
-opt = False
+opt = True
 t_sample = 30.0 * 60.0
 t_int = 30.0 * 60.0 # integration time per sample
 tau_min = 3.0 * 3600.0
@@ -25,6 +25,7 @@ noise_sigma = 2.0
 coloured_noise = True
 n_p = 3
 model = 'star' # 'star', comb_marg', comb' or 'ind'
+nu_max_eq_nu_0 = True
 
 # lightcurve model
 def lightcurve(time, amp_s, amp_c, omega):
@@ -114,7 +115,7 @@ def laplace(x, amp, timescale):
 	return amp * np.exp(-np.abs(x) / timescale)
 
 def autocorrelate(x):
-	return np.correlate(x, x, mode='full') / (len(x) - 1)
+	return np.correlate(x, x, mode='full') / len(x)
 
 def col_noise_cov_mat(times, amp, timescale):
 	n_samples = len(times)

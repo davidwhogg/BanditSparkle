@@ -46,19 +46,45 @@ def mn_prior_comb_marg(cube, n_dim, n_par):
 # MultiNest full comb prior, marginalized over amps
 def mn_prior_full_comb_marg(cube, n_dim, n_par):
 
-	# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
+	# nu_0
 	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
+	# d_nu 
 	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
 								ml.d_omega_sigma / 5.0)
+	# nu_max
 	cube[2] = ml.log_uniform_prior(cube[2], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
+	# bell_h
 	#cube[3] = ml.log_uniform_prior(cube[3], -2.0, 1.0)
 	cube[3] = ml.log_uniform_prior(cube[3], 1.0, 3.0)
+	# bell_w 
 	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
+	# r_01
 	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+	# kappa_01
 	cube[6] = ml.uniform_prior(cube[6], 0.2, 0.8)
+
+# MultiNest full comb prior, marginalized over amps, with nu_0 and 
+# nu_max defined to be equal
+def mn_prior_full_comb_marg_lock_nu(cube, n_dim, n_par):
+
+	# nu_0 = nu_max
+	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
+								   ml.log_omega_max) / 2.0 / np.pi
+	# d_nu
+	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
+								ml.d_omega_sigma / 5.0)
+	# bell_h
+	cube[2] = ml.log_uniform_prior(cube[3], 1.0, 3.0)
+	# bell_w
+	cube[3] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
+								   ml.log_omega_max) / 2.0 / np.pi
+	# r_01
+	cube[4] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+	# kappa_01
+	cube[5] = ml.uniform_prior(cube[6], 0.2, 0.8)
 
 # MultiNest log-likelihood
 def mn_log_like(cube, n_dim, n_par):
@@ -104,6 +130,28 @@ def mn_log_like_full_comb_marg(cube, n_dim, n_par):
 	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, cube[0], \
 									 cube[1], cube[2], cube[3], \
 									 cube[4], cube[5], cube[6])
+	omegas = 2.0 * np.pi * nus
+
+	# calculate log-like
+	b_mat = ml.des_mat(t, omegas)
+	v_inv_mat, log_det = ml.update_inv_det_stable(c_mat_inv, \
+												  c_mat_log_det, \
+												  b_mat, \
+												  amp_vars)
+	log_like = np.dot(d.T, np.dot(v_inv_mat, d)) + log_det
+	if ml.opt:
+		return log_like
+	else:
+		return -0.5 * log_like
+
+# MultiNest comb log-likelihood, marginalized over amps, with nu_0 
+# and nu_max defined to be equal
+def mn_log_like_full_comb_marg_lock_nu(cube, n_dim, n_par):
+
+	# construct frequencies and their std devs
+	nus, amp_vars = ml.comb_freq_var(ml.k_max, ml.l_max, cube[0], \
+									 cube[1], cube[0], cube[2], \
+									 cube[3], cube[4], cube[5])
 	omegas = 2.0 * np.pi * nus
 
 	# calculate log-like
@@ -175,7 +223,10 @@ elif ml.model == 'comb_marg':
 		   n_live_points = 1000, evidence_tolerance = 0.5, \
 		   sampling_efficiency = 0.3)
 elif ml.model == 'star':
-	n_par_fit = 7
+	if ml.nu_max_eq_nu_0:
+		n_par_fit = 6
+	else:
+		n_par_fit = 7
 	if cat_id is not None:
 		#c_mat = np.diag(e ** 2 * 722.597) # coloured noise boost
 		p_opt = np.genfromtxt('test_{:d}_autocorr_fit.txt'.format(cat_id))
@@ -189,17 +240,26 @@ elif ml.model == 'star':
 	c_mat_inv = np.linalg.inv(c_mat)
 	c_mat_log_det = np.linalg.slogdet(2.0 * np.pi * c_mat)[1]
 	if ml.opt:
-		#x0 = (2.071229237821e-03, 5.977924454460e-02, \
-		#	  2.071229237821e-03, 4.900000000000e-01, \
-		#	  4.952660764624e-04, 5.000000000000e-01, \
-		#	  3.333333333333e-01)
-		# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
-		x0 = (26.30e-6, 0.14, 27.98e-6, 500.0, \
-			  4.95e-04, 0.5, 0.5)
-		results = so.minimize(mn_log_like_full_comb_marg, x0, \
-							  args = (n_par_fit, n_par_fit), \
-							  method = 'Nelder-Mead', \
-							  options = {'maxfev': 10000})
+		print 'optimizing!'
+		if ml.nu_max_eq_nu_0:
+			# nu_0=nu_max, d_nu, bell_h, bell_w, r_01, kappa_01
+			x0 = (27.98e-6, 0.14, 100.0, 4.95e-6, 0.5, 0.5)
+			results = so.minimize(mn_log_like_full_comb_marg_lock_nu,\
+								  x0, args = (n_par_fit, n_par_fit), \
+								  method = 'Nelder-Mead', \
+								  options = {'maxfev': 10000})
+		else:
+			# nu_0, d_nu, nu_max, bell_h, bell_w, r_01, kappa_01
+			#x0 = (2.071229237821e-03, 5.977924454460e-02, \
+			#	  2.071229237821e-03, 4.900000000000e-01, \
+			#	  4.952660764624e-04, 5.000000000000e-01, \
+			#	  3.333333333333e-01)
+			x0 = (26.30e-6, 0.14, 27.98e-6, 500.0, \
+				  4.95e-06, 0.5, 0.5)
+			results = so.minimize(mn_log_like_full_comb_marg, x0, \
+								  args = (n_par_fit, n_par_fit), \
+								  method = 'Nelder-Mead', \
+								  options = {'maxfev': 10000})
 		if results.success:
 			print 'converged ({:d} func evals)'.format(results.nfev)
 			print 'minimum:'
@@ -208,9 +268,17 @@ elif ml.model == 'star':
 		else:
 			print results
 	else:
-		mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
-			   n_par_fit, resume = False, verbose = True, \
-			   outputfiles_basename = u'chains/test', \
-			   n_live_points = 1000, evidence_tolerance = 0.5, \
-			   sampling_efficiency = 0.3)
-	
+		print 'sampling!'
+		if ml.nu_max_eq_nu_0:
+			mn.run(mn_log_like_full_comb_marg_lock_nu, \
+				   mn_prior_full_comb_marg_lock_nu, \
+				   n_par_fit, resume = False, verbose = True, \
+				   outputfiles_basename = u'chains/test_lock_nu', \
+				   n_live_points = 1000, evidence_tolerance = 0.5, \
+				   sampling_efficiency = 0.3)
+		else:
+			mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
+				   n_par_fit, resume = False, verbose = True, \
+				   outputfiles_basename = u'chains/test', \
+				   n_live_points = 1000, evidence_tolerance = 0.5, \
+				   sampling_efficiency = 0.3)

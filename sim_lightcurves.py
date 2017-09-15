@@ -163,4 +163,4 @@ for i in range(n_comp):
 axes[2].set_xlim(np.min(om) * 1e6, np.max(om) * 1e6)
 axes[2].set_xlabel(r'$\omega [{\rm \mu Hz}]$')
 axes[2].set_ylabel(r'$\phi [{\rm rad}]$')
-mp.savefig('test_input_plots.pdf', box_inches = 'tight')
+mp.savefig('test_input_plots.pdf', bbox_inches='tight')
