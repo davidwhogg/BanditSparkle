@@ -77,14 +77,14 @@ def mn_prior_full_comb_marg_lock_nu(cube, n_dim, n_par):
 	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
 								ml.d_omega_sigma / 5.0)
 	# bell_h
-	cube[2] = ml.log_uniform_prior(cube[3], 1.0, 3.0)
+	cube[2] = ml.log_uniform_prior(cube[2], 1.0, 3.0)
 	# bell_w
-	cube[3] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
+	cube[3] = ml.log_uniform_prior(cube[3], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
 	# r_01
-	cube[4] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+	cube[4] = ml.gaussian_prior(cube[4], 0.5, 0.1)
 	# kappa_01
-	cube[5] = ml.uniform_prior(cube[6], 0.2, 0.8)
+	cube[5] = ml.uniform_prior(cube[5], 0.2, 0.8)
 
 # MultiNest log-likelihood
 def mn_log_like(cube, n_dim, n_par):
