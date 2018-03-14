@@ -7,6 +7,7 @@ import kplr
 import scipy.optimize as so
 import scipy.signal as ss
 import astropy.stats as aps
+import random as ra
 
 def running_mean(x, n):
     
@@ -36,12 +37,17 @@ mp.rcParams['lines.linewidth'] = lw
 cm = mpcm.get_cmap('plasma')
 
 # settings
-#target = 1162746 # 6757558 # 1162746 # 9787239
-target = 6757558 # 1162746 # 9787239
-download = False
+#target = 1162746
+#target = 6757558 # good!
+#target = 6104786
+#target = 7674224 # good!
+target = 6779699 # might be quite a lot of excess high-freq noise
+download = True
 cn_realisation = True
 s2d = 24.0 * 3600.0
 compare_psd_estimators = False
+trim_to_tess = True
+random_time_sampling = True
 
 # pick out interesting stars, along with the features of the target.
 # frequencies are in muHz (1 muHz => period of 278 hours)
@@ -54,6 +60,7 @@ nu_max_sigs = []
 nu_max_n_sigs = []
 stars = np.genfromtxt('apokasc_table_2.txt', dtype = None, \
                       skip_header = 27)
+i_tgt = None
 for i in range(len(stars)):
     star = stars[i]
     kic_ids.append(star[0])
@@ -74,21 +81,39 @@ for i in range(1, 11):
     fmt = '{:2d} {:8d} {:5.2f} {:5.2f}'
     print fmt.format(i, kic_ids[ind], dnu_n_sigs[ind], \
                      nu_max_n_sigs[ind])
-print kic_ids[np.argmax(combo_n_sigs)]
-print 'target dnu = {:10.4e} muHz ({:5.2f}-sigma)'.format(dnus[i_tgt], \
-                                                          dnu_n_sigs[i_tgt])
-print 'target nu_max = {:10.4e} muHz ({:5.2f}-sigma)'.format(nu_maxes[i_tgt], \
-                                                             nu_max_n_sigs[i_tgt])
-dnu_tgt = dnus[i_tgt] * 1e-6
-nu_max_tgt = nu_maxes[i_tgt] * 1e-6
-dnu_sig_tgt = dnu_sigs[i_tgt] * 1e-6
-nu_max_sig_tgt = nu_max_sigs[i_tgt] * 1e-6
+print 'target: ', target
+if i_tgt is None:
+    print 'target not found in apokasc...'
+else:
+    print 'target dnu = {:10.4e} muHz ({:5.2f}-sigma)'.format(dnus[i_tgt], \
+                                                              dnu_n_sigs[i_tgt])
+    print 'target nu_max = {:10.4e} muHz ({:5.2f}-sigma)'.format(nu_maxes[i_tgt], \
+                                                                 nu_max_n_sigs[i_tgt])
+    dnu_tgt = dnus[i_tgt] * 1e-6
+    nu_max_tgt = nu_maxes[i_tgt] * 1e-6
+    dnu_sig_tgt = dnu_sigs[i_tgt] * 1e-6
+    nu_max_sig_tgt = nu_max_sigs[i_tgt] * 1e-6
 if target == 1162746:
     h_tgt = 340.0
     w_tgt = 10.0 * 1e-6
 elif target == 6757558:
     h_tgt = 4.0
     w_tgt = 10.0 * 1e-6
+elif target == 6104786:
+    h_tgt = 20.0
+    w_tgt = 10.0 * 1e-6
+elif target == 9778288:
+    h_tgt = 20.0
+    w_tgt = 5.0 * 1e-6
+elif target == 7674224:
+    h_tgt = 20.0
+    w_tgt = 5.0 * 1e-6
+elif target == 6779699:
+    dnu_tgt = 8.0e-6
+    nu_max_tgt = 90.0e-6 #roughly!
+    nu_max_sig_tgt = 5.0e-6
+    h_tgt = 20.0
+    w_tgt = 5.0 * 1e-6
 
 # download data if not already done
 if download:
@@ -139,6 +164,14 @@ fig, axes = mp.subplots(1, 2, figsize=(16,5))
 if target == 1162746:
     ap_nu = np.linspace(nu_min, nu_max, 950)
 elif target == 6757558:
+    ap_nu = np.linspace(nu_min, nu_max, 2850)
+elif target == 6104786:
+    ap_nu = np.linspace(nu_min, nu_max, 2850)
+elif target == 9778288:
+    ap_nu = np.linspace(nu_min, nu_max, 2850)
+elif target == 7674224:
+    ap_nu = np.linspace(nu_min, nu_max, 2850)
+elif target == 6779699:
     ap_nu = np.linspace(nu_min, nu_max, 2850)
 mean_ls = np.zeros(len(ap_nu))
 mean_psd = np.zeros(2**10 + 1)
@@ -289,9 +322,32 @@ if target == 1162746:
     i_lc_tgt = 3
 elif target == 6757558:
     i_lc_tgt = 9
+elif target == 6104786:
+    i_lc_tgt = 4
+elif target == 9778288:
+    i_lc_tgt = 6
+elif target == 7674224:
+    i_lc_tgt = 4 # 9
+elif target == 6779699:
+    i_lc_tgt = 4
 time = time[i_lc == i_lc_tgt]
 ferr = ferr[i_lc == i_lc_tgt]
 flux = flux[i_lc == i_lc_tgt]
+
+# downsample if desired. using 1000 samples, where TESS is really 1440
+# but wevs
+if trim_to_tess:
+	if random_time_sampling:
+		rts_inds = range(len(time))
+		#rts_inds = range(2000)
+		ra.shuffle(rts_inds)
+		rts_inds = np.sort(rts_inds[0: 1000])
+		rts_time = time[rts_inds]
+		rts_ferr = ferr[rts_inds]
+		rts_flux = flux[rts_inds]
+	time = time[0: 1000]
+	ferr = ferr[0: 1000]
+	flux = flux[0: 1000]
 
 '''
 # if cutting by time, reduce poly fit order from 8 to 6
@@ -387,10 +443,23 @@ mp.show()
 
 # save baseline-corrected lightcurve to file
 # @TODO: flux errors aren't retrieved with same accuracy as other two fields
-np.savetxt('test_{:d}_lightcurve.txt'.format(target), \
-           np.column_stack((time.flatten(), bc_flux.flatten(), \
-                               ferr.flatten())), \
-           fmt = '%19.12e')
+if random_time_sampling:
+	rts_pfit = np.polyfit(rts_time, rts_flux, order, w = 1.0 / rts_ferr)
+	rts_poly = np.poly1d(rts_pfit)
+	rts_bc_flux = rts_flux - rts_poly(rts_time)
+	#mp.plot(time, bc_flux)
+	#mp.plot(rts_time, rts_bc_flux)
+	#mp.show()
+	np.savetxt('test_{:d}_lightcurve.txt'.format(target), \
+	           np.column_stack((rts_time.flatten(), \
+	           					rts_bc_flux.flatten(), \
+	                            rts_ferr.flatten())), \
+	           fmt = '%19.12e')
+else:
+	np.savetxt('test_{:d}_lightcurve.txt'.format(target), \
+	           np.column_stack((time.flatten(), bc_flux.flatten(), \
+	                            ferr.flatten())), \
+	           fmt = '%19.12e')
 
 # interpolate to allow Fourier transform. it's important to note a 
 # few things about Fourier transform conventions here. Numpy's 
@@ -438,15 +507,18 @@ if cn_realisation:
     axes[0].step(tint / s2d, fint_cn, color='g', alpha=0.5)
 axes[0].set_xlabel(r'$t\,[{\rm d}]$')
 axes[0].set_ylabel(r'baseline-corrected flux $[s^{-1}]$')
-axes[1].loglog(plot_freq, psd, color='k')
+axes[1].loglog(plot_freq, psd, color='k', label='data')
 if cn_realisation:
-    axes[1].loglog(plot_freq, psd_cn, color='g', alpha=0.5)
-axes[1].plot(plot_freq, bc_psd, color='r')
-axes[1].plot(plot_freq, bc_psd + env_psd, color='orange')
+    axes[1].loglog(plot_freq, psd_cn, color='g', alpha=0.5, \
+                   label='noise realization')
+axes[1].plot(plot_freq, bc_psd, color='r', label='envelope model')
+axes[1].plot(plot_freq, bc_psd + env_psd, color='orange', \
+             label='noise model')
 axes[1].axhline(noise_var / n_samples, color='gray', ls='--')
 axes[1].set_xlim(np.min(plot_freq), np.max(plot_freq))
 axes[1].set_xlabel(plot_freq_lab)
 axes[1].set_ylabel(r'power spectrum $[s^{-2}]$')
+axes[1].legend(loc='lower left')
 mp.savefig('test_{:d}_input_plots.pdf'.format(target), \
            bbox_inches='tight')
 mp.show()
