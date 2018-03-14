@@ -40,14 +40,14 @@ cm = mpcm.get_cmap('plasma')
 #target = 1162746
 #target = 6757558 # good!
 #target = 6104786
-#target = 7674224 # good!
-target = 6779699 # might be quite a lot of excess high-freq noise
+target = 7674224 # good!
+#target = 6779699 # might be quite a lot of excess high-freq noise
 download = True
 cn_realisation = True
 s2d = 24.0 * 3600.0
 compare_psd_estimators = False
-trim_to_tess = True
-random_time_sampling = True
+n_samples_max = 1000 # TESS = 1440
+random_time_sampling = False
 
 # pick out interesting stars, along with the features of the target.
 # frequencies are in muHz (1 muHz => period of 278 hours)
@@ -175,7 +175,7 @@ elif target == 6779699:
     ap_nu = np.linspace(nu_min, nu_max, 2850)
 mean_ls = np.zeros(len(ap_nu))
 mean_psd = np.zeros(2**10 + 1)
-order = 8
+order = 10 # 8
 n_lc = int(np.max(i_lc) + 1)
 lc_col = np.arange(n_lc) / float(n_lc - 1)
 for i in range(n_lc):
@@ -327,27 +327,25 @@ elif target == 6104786:
 elif target == 9778288:
     i_lc_tgt = 6
 elif target == 7674224:
-    i_lc_tgt = 4 # 9
+    i_lc_tgt = 5 # 4 # 9
 elif target == 6779699:
     i_lc_tgt = 4
 time = time[i_lc == i_lc_tgt]
 ferr = ferr[i_lc == i_lc_tgt]
 flux = flux[i_lc == i_lc_tgt]
 
-# downsample if desired. using 1000 samples, where TESS is really 1440
-# but wevs
-if trim_to_tess:
+# downsample if desired, optionally randomizing samples first 
+if n_samples_max is not None:
 	if random_time_sampling:
 		rts_inds = range(len(time))
-		#rts_inds = range(2000)
 		ra.shuffle(rts_inds)
-		rts_inds = np.sort(rts_inds[0: 1000])
+		rts_inds = np.sort(rts_inds[0: n_samples_max])
 		rts_time = time[rts_inds]
 		rts_ferr = ferr[rts_inds]
 		rts_flux = flux[rts_inds]
-	time = time[0: 1000]
-	ferr = ferr[0: 1000]
-	flux = flux[0: 1000]
+	time = time[0: n_samples_max]
+	ferr = ferr[0: n_samples_max]
+	flux = flux[0: n_samples_max]
 
 '''
 # if cutting by time, reduce poly fit order from 8 to 6
