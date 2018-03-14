@@ -4,11 +4,20 @@ import mod_lightcurves as ml
 
 # settings
 cat_id = 1162746
+cat_id = 6757558
+#cat_id = 6104786
+#cat_id = 7674224
 use_corner = True
 
 # read in chains. column structure is 
 # sample probability, -2*log(like), params
-s = np.genfromtxt('chains/test.txt')[:, 2:]
+base = 'test'
+if ml.model == 'star':
+	if cat_id is not None:
+		base += '_{:d}'.format(cat_id)
+if ml.nu_max_eq_nu_0:
+	base += '_lock_nu'
+s = np.genfromtxt('chains/' + base + '.txt')[:, 2:]
 n_s, n_p = s.shape
 if ml.model == 'ind':
 	stride = ml.n_p
@@ -20,8 +29,12 @@ elif ml.model == 'comb':
 # generate parameter labels
 labels = []
 if ml.model == 'star':
-	labels = [r'$\nu_{n00}$', r'$\Delta$', r'$\nu_{\rm max}$', \
-			  r'$H$', r'$W$', r'$r_{01}$', r'$\kappa_{01}$']
+	if ml.nu_max_eq_nu_0:
+		labels = [r'$\nu_{n00}$', r'$\Delta$', r'$H$', r'$W$', \
+				  r'$r_{01}$', r'$\kappa_{01}$']
+	else:
+		labels = [r'$\nu_{n00}$', r'$\Delta$', r'$\nu_{\rm max}$', \
+				  r'$H$', r'$W$', r'$r_{01}$', r'$\kappa_{01}$']
 elif ml.model == 'comb' or ml.model == 'comb_marg':
 	labels = [r'$\omega_0$', r'$\Delta\omega$']
 if ml.model == 'ind' or ml.model == 'comb':
@@ -33,10 +46,7 @@ if ml.model == 'ind' or ml.model == 'comb':
 
 # read in ground truth
 if ml.model == 'star':
-	if cat_id is not None:
-		par_file = 'test_{:d}'.format(cat_id) + '_params.txt'
-	else:
-		par_file = 'test_params.txt'
+	par_file = base + '_params.txt'
 	with open(par_file, 'r') as f:
 		p_true = []
 		for p in f.readline().split():
@@ -58,14 +68,24 @@ if use_corner:
 		for i in range(n_comp_fit):
 			s[:, stride*i+2] = np.log10(s[:, stride*i+2])
 	elif ml.model == 'star':
-		s[:, 0] *= 1.0e6
-		s[:, 2] *= 1.0e6
-		s[:, 3] = np.log10(s[:, 3])
-		s[:, 4] *= 1.0e6
-		p_true[0] *= 1.0e6
-		p_true[2] *= 1.0e6
-		p_true[3] = np.log10(p_true[3])
-		p_true[4] *= 1.0e6
+		if ml.nu_max_eq_nu_0:
+			s[:, 0] *= 1.0e6
+			#s[:, 2] = np.log10(s[:, 2])
+			s[:, 3] *= 1.0e6
+			p_true[0] *= 1.0e6
+			#p_true[2] = np.log10(p_true[2])
+			p_true[3] *= 1.0e6
+			#labels[2] = r'$\log_{10}H$'
+		else:
+			s[:, 0] *= 1.0e6
+			s[:, 2] *= 1.0e6
+			s[:, 3] = np.log10(s[:, 3])
+			s[:, 4] *= 1.0e6
+			p_true[0] *= 1.0e6
+			p_true[2] *= 1.0e6
+			p_true[3] = np.log10(p_true[3])
+			p_true[4] *= 1.0e6
+			labels[3] = r'$\log_{10}H$'
 	#elif ml.model == 'comb':
 	#	s[:, 0] = np.log10(s[:, 0])
 	fig = co.corner(s, bins = 50, labels = labels, \
@@ -131,13 +151,16 @@ if use_corner:
 				fig.axes[a_ind].axvline(p_true[j], \
 										color='red', ls=':', \
 										lw = 1.5)
-	mp.savefig('test_posterior.pdf')
+	mp.savefig(base + '_posterior.pdf')
 
 	# produce corner plot for parameters of interest
 	if ml.model == 'star':
 
 		# \Delta_\nu is a derived parameter
-		i_nu_0, i_delta, i_nu_max = (0, 1, 2)
+		if ml.nu_max_eq_nu_0:
+			i_nu_0, i_delta, i_nu_max = (0, 1, 0)
+		else:
+			i_nu_0, i_delta, i_nu_max = (0, 1, 2)
 		s_marg = np.zeros((n_s, 2))
 		s_marg[:, 0] = s[:, i_nu_0] * s[:, i_delta]
 		s_marg[:, 1] = s[:, i_nu_max]
@@ -159,5 +182,5 @@ if use_corner:
 				fig.axes[a_ind].axvline(p_true_marg[j], \
 										color='red', ls=':', \
 										lw = 1.5)
-		mp.savefig('test_posterior_marg.pdf')
+		mp.savefig(base + '_posterior_marg.pdf')
 
