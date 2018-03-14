@@ -43,6 +43,7 @@ cm = mpcm.get_cmap('plasma')
 target = 7674224 # good!
 #target = 6779699 # might be quite a lot of excess high-freq noise
 download = True
+use_cleaned_flux = True # use PDCSAP_FLUX
 cn_realisation = True
 s2d = 24.0 * 3600.0
 compare_psd_estimators = False
@@ -129,8 +130,12 @@ if download:
         with lcs[i].open() as f:
             hdu_data = f[1].data
             time_lc = hdu_data["time"]
-            flux_lc = hdu_data["sap_flux"]
-            ferr_lc = hdu_data["sap_flux_err"]
+            if use_cleaned_flux:
+                flux_lc = hdu_data["pdcsap_flux"]
+                ferr_lc = hdu_data["pdcsap_flux_err"]
+            else:
+                flux_lc = hdu_data["sap_flux"]
+                ferr_lc = hdu_data["sap_flux_err"]
             time = np.concatenate((time, time_lc))
             flux = np.concatenate((flux, flux_lc))
             ferr = np.concatenate((ferr, ferr_lc))
@@ -175,7 +180,10 @@ elif target == 6779699:
     ap_nu = np.linspace(nu_min, nu_max, 2850)
 mean_ls = np.zeros(len(ap_nu))
 mean_psd = np.zeros(2**10 + 1)
-order = 10 # 8
+if use_cleaned_flux:
+    order = 0
+else:
+    order = 10 # 8
 n_lc = int(np.max(i_lc) + 1)
 lc_col = np.arange(n_lc) / float(n_lc - 1)
 for i in range(n_lc):
@@ -188,7 +196,9 @@ for i in range(n_lc):
     else:
         col = cm(lc_col[i])
 
-    # fit out long-timescale variability
+    # fit out long-timescale variability. if using cleaned PDCSAP_FLUX
+    # (http://archive.stsci.edu/kepler/manuals/archive_manual.pdf), 
+    # order = 0 so just fitting out mean
     pfit = np.polyfit(time[inds], flux[inds], order, w = 1.0 / ferr[inds])
     poly = np.poly1d(pfit)
     bc_flux = flux[inds] - poly(time[inds])
@@ -366,7 +376,6 @@ print '{:d} samples spanning {:.2f} d'.format(n_samples, \
 print 'diagonal RMS noise: {:8.2e}'.format(np.sqrt(noise_var))
 
 # fit polynomial to remove long-timescale variability. plot results
-order = 8
 pfit = np.polyfit(time, flux, order, w = 1.0 / ferr)
 poly = np.poly1d(pfit)
 bc_flux = flux - poly(time)
