@@ -70,10 +70,12 @@ def mn_prior_full_comb_marg(cube, n_dim, n_par):
 # nu_max defined to be equal
 def mn_prior_full_comb_marg_lock_nu(cube, n_dim, n_par):
 
-	# nu_0 = nu_max
+	'''
+	# initial priors: some (marked) are bad!
+	# nu_0 = nu_max - range bad, not sure log is good
 	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
-	# d_nu
+	# d_nu - just plain bad
 	cube[1] = ml.gaussian_prior(cube[1], ml.d_omega_mu / 5.0, \
 								ml.d_omega_sigma / 5.0)
 	# bell_h
@@ -81,6 +83,20 @@ def mn_prior_full_comb_marg_lock_nu(cube, n_dim, n_par):
 	# bell_w
 	cube[3] = ml.log_uniform_prior(cube[3], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
+	# r_01
+	cube[4] = ml.gaussian_prior(cube[4], 0.5, 0.1)
+	# kappa_01
+	cube[5] = ml.uniform_prior(cube[5], 0.2, 0.8)
+	'''
+
+	# nu_0 = nu_max
+	cube[0] = ml.uniform_prior(cube[0], 10.0e-6, 200.0e-6)
+	# d_nu
+	cube[1] = ml.uniform_prior(cube[1], 0.05, 0.2)
+	# bell_h
+	cube[2] = ml.log_uniform_prior(cube[2], 0.0, 3.0)
+	# bell_w
+	cube[3] = ml.uniform_prior(cube[3], 1.0e-6, 50.0e-6)
 	# r_01
 	cube[4] = ml.gaussian_prior(cube[4], 0.5, 0.1)
 	# kappa_01
@@ -273,12 +289,12 @@ elif ml.model == 'star':
 			mn.run(mn_log_like_full_comb_marg_lock_nu, \
 				   mn_prior_full_comb_marg_lock_nu, \
 				   n_par_fit, resume = False, verbose = True, \
-				   outputfiles_basename = u'chains/test_lock_nu', \
+				   outputfiles_basename = u'chains/test_lock_nu_{:d}'.format(cat_id), \
 				   n_live_points = 1000, evidence_tolerance = 0.5, \
 				   sampling_efficiency = 0.3)
 		else:
 			mn.run(mn_log_like_full_comb_marg, mn_prior_full_comb_marg, \
 				   n_par_fit, resume = False, verbose = True, \
-				   outputfiles_basename = u'chains/test', \
+				   outputfiles_basename = u'chains/test_{:d}'.format(cat_id), \
 				   n_live_points = 1000, evidence_tolerance = 0.5, \
 				   sampling_efficiency = 0.3)
