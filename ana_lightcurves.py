@@ -6,18 +6,18 @@ import mod_lightcurves as ml
 cat_id = 1162746
 cat_id = 6757558
 #cat_id = 6104786
-#cat_id = 7674224
+cat_id = 7674224
 use_corner = True
 
 # read in chains. column structure is 
 # sample probability, -2*log(like), params
 base = 'test'
+if ml.nu_max_eq_nu_0:
+	base += '_lock_nu'
 if ml.model == 'star':
 	if cat_id is not None:
 		base += '_{:d}'.format(cat_id)
-if ml.nu_max_eq_nu_0:
-	base += '_lock_nu'
-s = np.genfromtxt('chains/' + base + '.txt')[:, 2:]
+s = np.genfromtxt('chains/1440_samples_lock_nu/' + base + '.txt')[:, 2:]
 n_s, n_p = s.shape
 if ml.model == 'ind':
 	stride = ml.n_p

@@ -46,6 +46,8 @@ def mn_prior_comb_marg(cube, n_dim, n_par):
 # MultiNest full comb prior, marginalized over amps
 def mn_prior_full_comb_marg(cube, n_dim, n_par):
 
+	'''
+	# initial priors: some (marked) are bad!
 	# nu_0
 	cube[0] = ml.log_uniform_prior(cube[0], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
@@ -61,6 +63,22 @@ def mn_prior_full_comb_marg(cube, n_dim, n_par):
 	# bell_w 
 	cube[4] = ml.log_uniform_prior(cube[4], ml.log_omega_min, \
 								   ml.log_omega_max) / 2.0 / np.pi
+	# r_01
+	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
+	# kappa_01
+	cube[6] = ml.uniform_prior(cube[6], 0.2, 0.8)
+	'''
+
+	# nu_0
+	cube[0] = ml.uniform_prior(cube[0], 10.0e-6, 200.0e-6)
+	# d_nu
+	cube[1] = ml.uniform_prior(cube[1], 0.05, 0.2)
+	# nu_max
+	cube[2] = ml.uniform_prior(cube[2], 10.0e-6, 200.0e-6)
+	# bell_h
+	cube[3] = ml.log_uniform_prior(cube[3], 0.0, 3.0)
+	# bell_w
+	cube[4] = ml.uniform_prior(cube[4], 1.0e-6, 50.0e-6)
 	# r_01
 	cube[5] = ml.gaussian_prior(cube[5], 0.5, 0.1)
 	# kappa_01
