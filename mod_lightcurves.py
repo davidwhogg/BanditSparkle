@@ -25,7 +25,7 @@ noise_sigma = 2.0
 coloured_noise = True
 n_p = 3
 model = 'star' # 'star', comb_marg', comb' or 'ind'
-nu_max_eq_nu_0 = True
+nu_max_eq_nu_0 = False
 
 # lightcurve model
 def lightcurve(time, amp_s, amp_c, omega):
@@ -57,6 +57,27 @@ def comb_freq_var(k_max, l_max, nu_0, d_nu, nu_max, bell_h, bell_w, \
 			ind += 1
 	els = np.mod(np.arange(n_comp), 2)
 	nus = nu_0 * (1.0 + ks * d_nu)
+	amp_vars = bell_h * r_01 ** els * \
+			   np.exp(-0.5 * ((nus - nu_max) / bell_w) ** 2)
+	return nus, np.repeat(amp_vars, 2)
+
+# generate comb of frequencies and their variances. rather than 
+# explicitly define the central frequency, here we identify it as the 
+# frequency within 0.5 delta_nu of nu_max
+def comb_freq_var_nearest(k_max, l_max, d_nu_0, d_nu, nu_max, \
+						  bell_h, bell_w, r_01, d_k_01 = 0.5):
+
+	n_comp = (l_max + 1) * (2 * k_max + 1)
+	nus = np.zeros(n_comp)
+	ind = 0
+	for k in range(-k_max, k_max + 1):
+		for el in range(l_max + 1):
+			nus[ind] = nu_max + d_nu * (d_nu_0 + k + el * d_k_01)
+			ind += 1
+
+	print nus
+
+	els = np.mod(np.arange(n_comp), 2)
 	amp_vars = bell_h * r_01 ** els * \
 			   np.exp(-0.5 * ((nus - nu_max) / bell_w) ** 2)
 	return nus, np.repeat(amp_vars, 2)
