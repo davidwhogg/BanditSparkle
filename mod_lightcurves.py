@@ -2,7 +2,7 @@ import numpy as np
 import scipy.special as ss
 
 # settings
-opt = True
+opt = False
 t_sample = 30.0 * 60.0
 t_int = 30.0 * 60.0 # integration time per sample
 tau_min = 3.0 * 3600.0
@@ -74,9 +74,6 @@ def comb_freq_var_nearest(k_max, l_max, d_nu_0, d_nu, nu_max, \
 		for el in range(l_max + 1):
 			nus[ind] = nu_max + d_nu * (d_nu_0 + k + el * d_k_01)
 			ind += 1
-
-	print nus
-
 	els = np.mod(np.arange(n_comp), 2)
 	amp_vars = bell_h * r_01 ** els * \
 			   np.exp(-0.5 * ((nus - nu_max) / bell_w) ** 2)
