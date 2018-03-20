@@ -79,6 +79,32 @@ def comb_freq_var_nearest(k_max, l_max, d_nu_0, d_nu, nu_max, \
 			   np.exp(-0.5 * ((nus - nu_max) / bell_w) ** 2)
 	return nus, np.repeat(amp_vars, 2)
 
+# generate comb of frequencies and their variances. rather than 
+# explicitly define the central frequency, here we identify it as the 
+# frequency within 0.5 delta_nu of nu_max. allow for an arbitrary 
+# number of ells
+def comb_freq_var_nearest_gen(k_max, l_max, d_nu_0, d_nu, nu_max, \
+							  bell_h, bell_w, r_0l, d_k_0l):
+	
+	# add ell = 0 mode to relevant arrays
+	r_0l = np.insert(r_0l, 0, 1.0)
+	d_k_0l = np.insert(d_k_0l, 0, 0.0)
+
+	# form comb
+	n_comp = (l_max + 1) * (2 * k_max + 1)
+	nus = np.zeros(n_comp)
+	amp_vars = np.zeros(n_comp)
+	ind = 0
+	for k in range(-k_max, k_max + 1):
+		for el in range(l_max + 1):
+			nus[ind] = nu_max + d_nu * (d_nu_0 + k + d_k_0l[el])
+			amp_vars[ind] = bell_h * r_0l[el] * \
+							np.exp(-0.5 * ((nus[ind] - nu_max) / \
+										   bell_w) ** 2)
+			ind += 1
+
+	return nus, np.repeat(amp_vars, 2)
+
 # various generic prior rescalings for MultiNest
 def uniform_prior(x, x_min, x_max):
 	
